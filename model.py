@@ -30,7 +30,9 @@ def LoadData():
     print(animal_intake)
     print(animal_intake.columns)
 
-    return animal_intake, animal_outcome
+    trainI, testI = train_test_split(animal_intake, train_size = 0.1,shuffle=False)
+
+    return trainI, animal_outcome
 
 def PreprocessData(animal_outcome,animal_intake):
 
@@ -39,7 +41,56 @@ def PreprocessData(animal_outcome,animal_intake):
 
     dropList = ['FoundLocation']
     animal_intake.drop(columns=dropList,inplace=True)
+
+    #Cats,Birds,Dogs only
+    animal_intake = animal_intake[animal_intake.AnimalType != "Other"]
     print(animal_intake)
+
+
+
+    #Name Field
+    #Boolean
+    '''
+    animal_intake['Name'].dropna(axis=0, how='any', inplace=True)
+    animal_intake['Name'].fillna('No')
+    for i in range(len(animal_intake['Name'])):
+        print(i)
+        if animal_intake['Name'].iloc[i] != 'No':
+            animal_intake['Name'].iloc[i] = 'Yes'
+
+    print(animal_intake['Name'])
+    #End Name conversion
+'''
+
+
+    #Map down colors into color_list
+'''    colorset=[]
+    color_list = ['Brown','White','Red','Blue','Black','Orange','Yellow']
+    print("Pre-Update color column %s "% animal_intake['Color'])
+    for i in animal_intake['Color']:
+        if i in colorset:
+            continue
+        else:
+            colorset.append(i)
+
+    colors = animal_intake['Color']
+    print(len(colors))
+    for i in range(len(colors)):
+        print(i)
+
+        if any(elem in colors.iloc[i] for elem in color_list):
+            for j in color_list:
+                if j in colors.iloc[i]:
+                    colors.iloc[i] = j
+        #else:
+            #print("nope %s" % colors.iloc[i])
+    print("Updated color column %s" % colors)
+    #End change colors snippet
+'''
+
+
+
+
 
 
 
