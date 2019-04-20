@@ -39,10 +39,11 @@ def LoadData():
 def PreprocessData(animal_outcome,animal_intake):
 
     #Join fields
-    print(pd.merge(animal_outcome,animal_intake,on="AnimalID", how="inner"))
-    exit(0)
-    #Add/Remove/update fields
+    dataset = pd.merge(animal_outcome,animal_intake,on="AnimalID", how="outer")
+    print(dataset.columns)
 
+    #Add/Remove/update fields
+    '''
 
     dropList = ['FoundLocation']
     animal_intake.drop(columns=dropList,inplace=True)
@@ -50,6 +51,7 @@ def PreprocessData(animal_outcome,animal_intake):
     #Cats,Birds,Dogs only
     animal_intake = animal_intake[animal_intake.AnimalType != "Other"]
     print(animal_intake)
+    '''
 
     #Breed Feature construction/breakdown
     '''
@@ -62,7 +64,7 @@ def PreprocessData(animal_outcome,animal_intake):
             isMix.append("No")
     animal_intake['isMix'] = isMix
     print(animal_intake['isMix'])
-    '''
+   '''
 
 
 
