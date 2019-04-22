@@ -32,15 +32,100 @@ def LoadData():
     print(animal_intake.columns)
 
     #Train/test split
-    trainI, testI = train_test_split(animal_intake, train_size = 0.1,shuffle=False)
+    trainI, testI = train_test_split(animal_intake, train_size = 0.5,shuffle=False)
+    trainO, testO = train_test_split(animal_outcome,train_size=0.5, shuffle=False)
 
     return animal_intake, animal_outcome
 
+def BreakDates(animal_intake):
+
+# Break dates, include Day of Week, Time
+    animal_intake['Date'], animal_intake['Time'] = animal_intake['DateTime'].str.split(' ',1).str
+    animal_intake['DayOfWeek'] = animal_intake['Date'].copy()
+    animal_intake.drop(['DateTime'],axis=1, inplace=True)
+
+
+    j = 0
+    for i in animal_intake['DayOfWeek']:
+        print(j)
+        j += 1
+        dateSplit = i.split('/')
+        #print(dateSplit)
+        real_date = date(int(dateSplit[2]),int(dateSplit[0]),int(dateSplit[1]))
+        #print(real_date.weekday())
+        animal_intake['DayOfWeek'] = real_date.weekday()
+    print(animal_intake['DayOfWeek'])
+
+
+ #       #Remove backslashes from Date
+   # for i in range(len(animal_intake['Date'])):
+    #    print(i)
+     #   animal_intake['Date'].iloc[i] = animal_intake['Date'].iloc[i].replace("/","")
+
+
+
+    return animal_intake
+
+
+
+#Takes a loooong time
 def PreprocessData(animal_outcome,animal_intake):
+    print(animal_outcome.columns)
+    print(animal_outcome['AnimalID'])
+    ids = animal_outcome['AnimalID']
+    print(animal_outcome[ids.isin(ids[ids.duplicated()])].sort_values("AnimalID"))
+    print(animal_outcome.groupby("AnimalID").count())
+
+
+
+    #Name Frequency
+    animal_intake['NameFreq'] = np.ones((animal_intake.shape)[0])
+
+
+
+    #Aggregate Name Frequency
+    name_freq = animal_intake.groupby('AnimalID')['NameFreq'].count()
+
+    #Gets last entry for animalID
+    print(animal_outcome.sort_values('DateTime').drop_duplicates('AnimalID',keep='last'))
+    print(animal_intake.sort_values('DateTime').drop_duplicates('AnimalID',keep='last'))
+
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        print(animal_outcome[:10])
+        print(animal_intake[:10])
+
 
     #Join fields
-    dataset = pd.merge(animal_outcome,animal_intake,on="AnimalID", how="outer")
+    dataset = pd.merge(animal_outcome,animal_intake,on=["AnimalID","Breed","Color","AnimalType","Name"], how="outer")
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        print(dataset[:10])
+
+    print(name_freq)
+    dataset['NameFreq'] = name_freq
+    print(dataset)
     print(dataset.columns)
+
+
+    exit(0)
+    BreakDates(animal_outcome)
+    BreakDates(animal_intake)
+
+
+
+
+
+
+
+
+
+    for i in range(5):
+
+        print(dataset.iloc[i])
+
+    print(dataset)
+    animalID = dataset.groupby(['AnimalID'])
+    print((animalID.count())['NameFreq'])
+    print(dataset.iloc[0])
 
     #Add/Remove/update fields
     '''
@@ -91,25 +176,6 @@ def PreprocessData(animal_outcome,animal_intake):
     print(animal_intake['AgeuponIntake'])
 '''
 
-
-# Break dates, include Day of Week, Time
-'''
-    animal_intake['DayOfWeek'], animal_intake['Time'] = animal_intake['DateTime'].str.split(' ',1).str
-    animal_intake.drop(['DateTime'],axis=1, inplace=True)
-
-    print(animal_intake)
-
-    j = 0
-    for i in animal_intake['DayOfWeek']:
-        print(j)
-        j += 1
-        dateSplit = i.split('/')
-        #print(dateSplit)
-        real_date = date(int(dateSplit[2]),int(dateSplit[0]),int(dateSplit[1]))
-        #print(real_date.weekday())
-        animal_intake['DayOfWeek'] = real_date.weekday()
-    print(animal_intake['DayOfWeek'])
-'''
 
 
 
