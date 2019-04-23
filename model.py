@@ -7,6 +7,8 @@ from sklearn.model_selection import train_test_split
 from datetime import date
 
 
+#To Do: Visualize table join using SQL
+
 def main():
 
 
@@ -72,41 +74,84 @@ def BreakDates(animal_intake):
 def PreprocessData(animal_outcome,animal_intake):
     print(animal_outcome.columns)
     print(animal_outcome['AnimalID'])
-    ids = animal_outcome['AnimalID']
-    print(animal_outcome[ids.isin(ids[ids.duplicated()])].sort_values("AnimalID"))
-    print(animal_outcome.groupby("AnimalID").count())
+    #ids = animal_outcome['AnimalID']
+    #print(animal_outcome[ids.isin(ids[ids.duplicated()])].sort_values("AnimalID"))
+    #print(animal_outcome.groupby("AnimalID").count())
+
+
+    #Add/Remove/update fields
+
+    dropList = ['FoundLocation']
+    animal_intake.drop(columns=dropList,inplace=True)
+
+    #Cats,Birds,Dogs only
+    animal_intake = animal_intake[animal_intake.AnimalType != "Other"]
+    animal_outcome = animal_outcome[animal_outcome.AnimalType != "Other"]
+
+
+    isAggressive = []
+    isMix = []
+    for i in range(len(animal_intake['Breed'])):
+        print(i)
+        if("Pit Bull" in animal_intake['Breed'].iloc[i]):
+            isAggressive.append("Yes")
+        else:
+            isAggressive.append("No")
+        if("Mix" in animal_intake['Breed'].iloc[i]):
+            isMix.append("Yes")
+        else:
+            isMix.append("No")
+    animal_intake['isAggressive'] = isAggressive
+    animal_intake['isMix'] = isMix
+    print(animal_intake['isMix'])
+    print(animal_intake['isAggressive'])
+    exit(0)
+    print("removedup intake")
+    print(animal_intake)
 
 
 
     #Name Frequency
+    '''
     animal_intake['NameFreq'] = np.ones((animal_intake.shape)[0])
 
 
 
     #Aggregate Name Frequency
-    name_freq = animal_intake.groupby('AnimalID')['NameFreq'].count()
+   # animal_intake['NameFreq'] = animal_intake.groupby('AnimalID')['NameFreq'].count()
 
     #Gets last entry for animalID
-    print(animal_outcome.sort_values('DateTime').drop_duplicates('AnimalID',keep='last'))
-    print(animal_intake.sort_values('DateTime').drop_duplicates('AnimalID',keep='last'))
+    print("PreDup")
+    animal_outcome = animal_outcome.sort_values('DateTime').drop_duplicates('AnimalID',keep='last')
+    animal_intake = animal_intake.sort_values('DateTime').drop_duplicates('AnimalID',keep='last')
+    print("PostDup  intake")
+    print(animal_intake)
+    print(len(animal_intake))
 
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-        print(animal_outcome[:10])
-        print(animal_intake[:10])
+    #animal_intake['NameFreq'] = animal_intake.groupby('AnimalID')['NameFreq']
+    print(animal_intake['AnimalID'])
+    print(animal_outcome['AnimalID'])
+    common = pd.concat([animal_intake['AnimalID'],animal_outcome['AnimalID']]).drop_duplicates(keep=False)
+    print(common)
+
+    exit(0)
+
+    #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        #print(animal_outcome[:10])
+        #print(animal_intake[:10])
 
 
     #Join fields
     dataset = pd.merge(animal_outcome,animal_intake,on=["AnimalID","Breed","Color","AnimalType","Name"], how="outer")
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-        print(dataset[:10])
+    #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        #print(dataset[:10])
 
-    print(name_freq)
-    dataset['NameFreq'] = name_freq
-    print(dataset)
-    print(dataset.columns)
+    #print(name_freq)
+    #dataset['NameFreq'] = name_freq
+    #print(dataset)
+    #print(dataset.columns)
 
 
-    exit(0)
     BreakDates(animal_outcome)
     BreakDates(animal_intake)
 
@@ -126,7 +171,7 @@ def PreprocessData(animal_outcome,animal_intake):
     animalID = dataset.groupby(['AnimalID'])
     print((animalID.count())['NameFreq'])
     print(dataset.iloc[0])
-
+'''
     #Add/Remove/update fields
     '''
 
@@ -137,19 +182,6 @@ def PreprocessData(animal_outcome,animal_intake):
     animal_intake = animal_intake[animal_intake.AnimalType != "Other"]
     print(animal_intake)
     '''
-
-    #Breed Feature construction/breakdown
-    '''
-    isMix = []
-    for i in range(len(animal_intake['Breed'])):
-        print(i)
-        if("Mix" in animal_intake['Breed'].iloc[i]):
-            isMix.append("Yes")
-        else:
-            isMix.append("No")
-    animal_intake['isMix'] = isMix
-    print(animal_intake['isMix'])
-   '''
 
 
 
