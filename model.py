@@ -7,18 +7,18 @@ from sklearn.model_selection import train_test_split
 from datetime import date
 
 
-#To Do: Visualize table join using SQL
 
 def main():
 
 
     animal_intake, animal_outcome = LoadData()
-    PreprocessData(animal_outcome,animal_intake)
+    processed_dataset = PreprocessData(animal_outcome,animal_intake)
 
 
 
     return 0
 
+#Will comment tonight
 def LoadData():
 
     animal_intake = pd.read_csv("dataset/Austin_Animal_Center_Intakes.csv")
@@ -97,7 +97,8 @@ def BreakDates(animal_intake):
 
 
 
-#Takes a loooong time
+#V1: Takes a loooong time
+#V2: Gooooes faster now
 def PreprocessData(animal_outcome,animal_intake):
 
     print(animal_outcome.columns)
@@ -142,8 +143,8 @@ def PreprocessData(animal_outcome,animal_intake):
     dropListIntake = ['FoundLocation','MonthYear']
     #remove redundant features from outcome dataset
     dropListOutcome = ['DateofBirth','MonthYear','OutcomeSubtype','Name','AnimalType',"Color","Breed"]
-    animal_intake.drop(columns=dropListIntake,inplace=True)
-    animal_outcome.drop(columns=dropListOutcome, inplace=True)
+    animal_intake = animal_intake.drop(columns=dropListIntake)
+    animal_outcome = animal_outcome.drop(columns=dropListOutcome)
     animal_outcome.dropna(inplace=True)
     animal_intake.dropna(inplace=True)
     print(animal_intake['Name'])
@@ -197,27 +198,14 @@ def PreprocessData(animal_outcome,animal_intake):
     animal_intake = animal_intake.merge(name_freq,on=['AnimalID'],how='right')
     animal_intake = animal_intake.rename(index=str, columns={"NameFreq_y":"NumberOfAdmits"})
     animal_intake
-    animal_intake = animal_intake.drop(['DateTime_y'],axis=1)
+    animal_intake = animal_intake.drop(['NameFreq_x'],axis=1)
 
     print(animal_intake.sort_values('AnimalID'))
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(animal_intake[:10])
 
 
-    exit(0)
-
-    #print("PostDup  intake")
-    #print(animal_intake)
-    #print(len(animal_intake))
-    #name_freq = np.array(animal_intake.groupby('AnimalID')['NameFreq'])
     print(name_freq)
-    #print(animal_intake['AnimalID'])
-    #print(animal_outcome['AnimalID'])
-    #common = pd.concat([animal_intake['AnimalID'],#animal_outcome['AnimalID']]).drop_duplicates(keep=False)
-
-    #print(common)
-
-
     #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         #print(animal_outcome[:10])
         #print(animal_intake[:10])
@@ -246,16 +234,6 @@ def PreprocessData(animal_outcome,animal_intake):
 #    dataset = dataset.sort_values('Date_x').drop_duplicates('AnimalID',keep='last')
 
 
-    dataset = dataset.sort_values('AnimalID')
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-        print(dataset[:10])
-
-    print(dataset)
-    print(dataset.columns)
-
-    exit(0)
-
-
 
 
     #dataset = dataset[['AnimalID','DateTime_x']].drop_duplicates(keep='last'))
@@ -276,9 +254,7 @@ def PreprocessData(animal_outcome,animal_intake):
 
 
     print(dataset)
-    print(animal_intake['DateTime'])
 #    print(dataset['MonthYear_x'].drop_duplicates(keep='last'))
-    exit(0)
     #print(name_freq)
     #dataset['NameFreq'] = name_freq
     #print(dataset)
@@ -288,7 +264,8 @@ def PreprocessData(animal_outcome,animal_intake):
 
 
 
-
+#To fit below code
+    animal_intake = dataset
 
 
 
@@ -296,58 +273,70 @@ def PreprocessData(animal_outcome,animal_intake):
 
 
     #Fix Age (Normalize values to age in days)
-    '''
+    ageUponIntake = []
     for i in range(len(animal_intake['AgeuponIntake'])):
-        eif "months" in animal_intake['AgeuponIntake'].iloc[i] or "month" in animal_intake['AgeuponIntake'].iloc[i]:
-            print(i)
+        if "months" in animal_intake['AgeuponIntake'].iloc[i] or "month" in animal_intake['AgeuponIntake'].iloc[i]:
             fixed_time = int((animal_intake['AgeuponIntake'].iloc[i])[0]) * 30.417
-            animal_intake['AgeuponIntake'].iloc[i] = str(fixed_time) + " days"
+            ageUponIntake.append(str(fixed_time) + " days")
             continue
         if "years" in animal_intake['AgeuponIntake'].iloc[i] or "year" in animal_intake['AgeuponIntake'].iloc[i]:
-            print(i)
             fixed_time = int((animal_intake['AgeuponIntake'].iloc[i])[0]) * 365
-            animal_intake['AgeuponIntake'].iloc[i] = str(fixed_time) + " days"
+            ageUponIntake.append(str(fixed_time) + " days")
             continue
 
         if "weeks" in animal_intake['AgeuponIntake'].iloc[i]:
-            print(i)
             fixed_time = int((animal_intake['AgeuponIntake'].iloc[i])[0]) * 7
-            animal_intake['AgeuponIntake'].iloc[i] = str(fixed_time) + " days"
+            ageUponIntake.append(str(fixed_time) + " days")
             continue
 
+        if "week" in animal_intake['AgeuponIntake'].iloc[i]:
+            fixed_time = int((animal_intake['AgeuponIntake'].iloc[i])[0]) * 7
+            ageUponIntake.append(str(fixed_time) + " days")
+            continue
+
+        if "days" in animal_intake['AgeuponIntake'].iloc[i]:
+            ageUponIntake.append(animal_intake['AgeuponIntake'].iloc[i])
+            continue
+
+        if "day" in animal_intake['AgeuponIntake'].iloc[i]:
+            ageUponIntake.append(animal_intake['AgeuponIntake'].iloc[i])
+            continue
+
+        print(animal_intake['AgeuponIntake'].iloc[i])
+
+
+
+
+
+
+
+    print(len(ageUponIntake))
+    print(animal_intake.shape)
+    animal_intake['AgeuponIntake'] = ageUponIntake
     print(animal_intake['AgeuponIntake'])
-'''
+    print(ageUponIntake)
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        print(dataset[:10])
+
+
+
 
 
 
 
 
 #Split sex upon intake as Gender, and intactness
-'''
     animal_intake['Gender'], animal_intake['Intactness'] = animal_intake['SexuponIntake'].str.split(' ',1).str
     animal_intake.drop(['SexuponIntake'],axis=1,inplace=True)
     print(animal_intake.columns)
     #End break up SexuponIntake into Gender and Intactness
-'''
 
-   #Name Field
-    #Boolean
-'''
-    animal_intake['Name'].dropna(axis=0, how='any', inplace=True)
-    animal_intake['Name'].fillna('No')
-    for i in range(len(animal_intake['Name'])):
-        print(i)
-        if animal_intake['Name'].iloc[i] != 'No':
-            animal_intake['Name'].iloc[i] = 'Yes'
-
-    print(animal_intake['Name'])
-    #End Name conversion
-'''
-
-
+    '''
     #Map down colors into color_list
-'''    colorset=[]
+    colorset=[]
+    colorsForList = []
     color_list = ['Brown','White','Red','Blue','Black','Orange','Yellow']
+
     print("Pre-Update color column %s "% animal_intake['Color'])
     for i in animal_intake['Color']:
         if i in colorset:
@@ -363,20 +352,26 @@ def PreprocessData(animal_outcome,animal_intake):
         if any(elem in colors.iloc[i] for elem in color_list):
             for j in color_list:
                 if j in colors.iloc[i]:
-                    colors.iloc[i] = j
-        #else:
-            #print("nope %s" % colors.iloc[i])
+                    #colors.iloc[i] = j
+                    colorsForList.append(j)
+        else:
+            print("nope %s" % colors.iloc[i])
+    animal_intake['Color'] = colorsForList
     print("Updated color column %s" % colors)
     #End change colors snippet
-'''
+
+    '''
+
+    print(animal_intake)
+
+
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        print(animal_intake[:10])
+
+    return animal_intake
 
 
 
-
-
-
-
-    #Join Tables by AnimalID
 
 
 
