@@ -1,4 +1,5 @@
 import numpy as np
+import sklearn.ensemble import RnadomForestClassifier
 import pandas as pd
 import matplotlib
 matplotlib.use('agg')
@@ -47,21 +48,22 @@ def LoadData():
 def BreakDates(animal_intake):
 
 # Break dates, include Day of Week, Time
-    animal_intake['Date_x'], animal_intake['Time_x'] = animal_intake['DateTime_x'].str.split(' ',1).str
-    animal_intake['Date_y'], animal_intake['Time_y'] = animal_intake['DateTime_y'].str.split(' ',1).str
+    animal_intake['Date_Outcomes'], animal_intake['Time_Outcomes'] = animal_intake['DateTime_x'].str.split(' ',1).str
+    animal_intake['Date_Intakes'], animal_intake['Time_Intakes'] = animal_intake['DateTime_y'].str.split(' ',1).str
 
-    animal_intake['DayOfWeek_x'] = animal_intake['Date_x'].copy()
-    animal_intake['DayOfWeek_y'] = animal_intake['Date_y'].copy()
+    animal_intake['DayOfWeek_Outcomes'] = animal_intake['Date_Outcomes'].copy()
+    animal_intake['DayOfWeek_Intakes'] = animal_intake['Date_Intakes'].copy()
 
-    animal_intake.drop(['DateTime_x'],axis=1, inplace=True)
     animal_intake.drop(['DateTime_y'],axis=1, inplace=True)
+    animal_intake.drop(['DateTime_x'],axis=1, inplace=True)
 
-    print(animal_intake['Date_x'])
-    print(animal_intake['DayOfWeek_x'])
+    print(animal_intake['Date_Outcomes'])
+    print(animal_intake['DayOfWeek_Outcomes'])
 
 
+    dayOfWeek = []
     j = 0
-    for i in animal_intake['DayOfWeek_x']:
+    for i in animal_intake['DayOfWeek_Outcomes']:
         if i == "nan":
             continue
         print(j)
@@ -71,18 +73,23 @@ def BreakDates(animal_intake):
         #print(dateSplit)
         real_date = date(int(dateSplit[2]),int(dateSplit[0]),int(dateSplit[1]))
         #print(real_date.weekday())
-        animal_intake['DayOfWeek_x'] = real_date.weekday()
-    for i in animal_intake['DayOfWeek_y']:
+        dayOfWeek.append(real_date.weekday())
+    animal_intake['DayOfWeek_Outcomes'] = dayOfWeek
+    j = 0
+    dayOfWeek = []
+    for i in animal_intake['DayOfWeek_Intakes']:
         print(j)
         j += 1
         dateSplit = i.split('/')
         #print(dateSplit)
         real_date = date(int(dateSplit[2]),int(dateSplit[0]),int(dateSplit[1]))
-        #print(real_date.weekday())
-        animal_intake['DayOfWeek_y'] = real_date.weekday()
+        print(real_date.weekday())
+        dayOfWeek.append(real_date.weekday())
+    animal_intake['DayOfWeek_Intakes'] = dayOfWeek
 
-    print(animal_intake['DayOfWeek_x'])
-    print(animal_intake['DayOfWeek_y'])
+
+    print(animal_intake['DayOfWeek_Outcomes'])
+    print(animal_intake['DayOfWeek_Intakes'])
 
 
 
@@ -159,7 +166,6 @@ def PreprocessData(animal_outcome,animal_intake):
 
 
 
-    '''
     isAggressive = []
     isMix = []
     for i in range(len(animal_intake['Breed'])):
@@ -176,10 +182,6 @@ def PreprocessData(animal_outcome,animal_intake):
     animal_intake['isMix'] = isMix
     print(animal_intake['isMix'])
     print(animal_intake['isAggressive'])
-    exit(0)
-    print("removedup intake")
-    print(animal_intake)
-    '''
 
 
     #Name Frequency
@@ -230,7 +232,7 @@ def PreprocessData(animal_outcome,animal_intake):
 
 
 
-    #BreakDates(dataset)
+    BreakDates(dataset)
 #    dataset = dataset.sort_values('Date_x').drop_duplicates('AnimalID',keep='last')
 
 
@@ -273,6 +275,7 @@ def PreprocessData(animal_outcome,animal_intake):
 
 
     #Fix Age (Normalize values to age in days)
+    #Could make neater by using reg expressions
     ageUponIntake = []
     for i in range(len(animal_intake['AgeuponIntake'])):
         if "months" in animal_intake['AgeuponIntake'].iloc[i] or "month" in animal_intake['AgeuponIntake'].iloc[i]:
@@ -326,43 +329,100 @@ def PreprocessData(animal_outcome,animal_intake):
 
 
 #Split sex upon intake as Gender, and intactness
-    animal_intake['Gender'], animal_intake['Intactness'] = animal_intake['SexuponIntake'].str.split(' ',1).str
+    animal_intake['Intactness'], animal_intake['Gender'] = animal_intake['SexuponIntake'].str.split(' ',1).str
     animal_intake.drop(['SexuponIntake'],axis=1,inplace=True)
     print(animal_intake.columns)
     #End break up SexuponIntake into Gender and Intactness
 
-    '''
+
     #Map down colors into color_list
     colorset=[]
     colorsForList = []
-    color_list = ['Brown','White','Red','Blue','Black','Orange','Yellow']
+    color_list = ['Brown','White','Red','Blue','Black','Orange','Yellow','Tan','Tortie','Tricolor','Chocolate',"Calico","Gold","Cream","Gray"]
 
-    print("Pre-Update color column %s "% animal_intake['Color'])
-    for i in animal_intake['Color']:
-        if i in colorset:
-            continue
-        else:
-            colorset.append(i)
+    #for i in animal_intake['Color']:
+     #   if i in colorset:
+      #      continue
+       # else:
+#            colorset.append(i)
 
     colors = animal_intake['Color']
+    nope=[]
     print(len(colors))
     for i in range(len(colors)):
         print(i)
 
         if any(elem in colors.iloc[i] for elem in color_list):
+            #Choose a unique color for element
+            colorsChosen = False
             for j in color_list:
                 if j in colors.iloc[i]:
-                    #colors.iloc[i] = j
-                    colorsForList.append(j)
+                    if(not(colorsChosen)):
+                        colorsForList.append(j)
+                        colorsChosen=True
+
         else:
             print("nope %s" % colors.iloc[i])
+            nope.append(colors.iloc[i])
+            colorsForList.append("Other")
+
+    print("nope colors %s"%nope)
+    print(len(colors))
+    print(len(colorsForList))
+    print(len(nope))
     animal_intake['Color'] = colorsForList
     print("Updated color column %s" % colors)
     #End change colors snippet
 
-    '''
+
 
     print(animal_intake)
+
+
+    #Map down Breed into breed_list
+'''
+    colorset=[]
+    colorsForList = []
+    color_list = ['Hound','Pitbull','German Shepherd']
+
+    #for i in animal_intake['Color']:
+     #   if i in colorset:
+      #      continue
+       # else:
+#            colorset.append(i)
+
+    colors = animal_intake['Breed']
+    nope=[]
+    print(len(colors))
+    for i in range(len(colors)):
+        print(i)
+
+        if any(elem in colors.iloc[i] for elem in color_list):
+            #Choose a unique color for element
+            colorsChosen = False
+            for j in color_list:
+                if j in colors.iloc[i]:
+                    if(not(colorsChosen)):
+                        colorsForList.append(j)
+                        colorsChosen=True
+
+        else:
+            print("nope %s" % colors.iloc[i])
+            nope.append(colors.iloc[i])
+            colorsForList.append("Other")
+
+    print("nope colors %s"%nope)
+    print(len(colors))
+    print(len(colorsForList))
+    print(len(nope))
+    animal_intake['Breed'] = colorsForList
+    print("Updated color column %s" % colors)
+    #End change colors snippet
+
+
+'''
+
+
 
 
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
@@ -372,6 +432,11 @@ def PreprocessData(animal_outcome,animal_intake):
 
 
 
+def PredictOutcome():
+
+    RandomTreesClassifier
+
+    return 0
 
 
 
