@@ -1,5 +1,5 @@
 import numpy as np
-import sklearn.ensemble import RnadomForestClassifier
+from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import matplotlib
 matplotlib.use('agg')
@@ -13,7 +13,9 @@ def main():
 
 
     animal_intake, animal_outcome = LoadData()
-    processed_dataset = PreprocessData(animal_outcome,animal_intake)
+    train,test,ground_truth = PreprocessData(animal_outcome,animal_intake)
+    PredictOutcome(train,test,ground_truth)
+
 
 
 
@@ -380,7 +382,7 @@ def PreprocessData(animal_outcome,animal_intake):
 
 
     #Map down Breed into breed_list
-'''
+    '''
     colorset=[]
     colorsForList = []
     color_list = ['Hound','Pitbull','German Shepherd']
@@ -420,7 +422,20 @@ def PreprocessData(animal_outcome,animal_intake):
     #End change colors snippet
 
 
-'''
+    '''
+
+
+
+    #Train/test split
+    trainI, testI = train_test_split(animal_intake, train_size = 0.01,shuffle=False)
+
+    #seperate ground truth of test labels from dataset
+    ground_truth = testI['OutcomeType']
+    testI = testI.drop(labels=['OutcomeType'],axis=1)
+
+    print(trainI.columns)
+    print(testI.columns)
+    print(ground_truth)
 
 
 
@@ -428,13 +443,21 @@ def PreprocessData(animal_outcome,animal_intake):
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(animal_intake[:10])
 
-    return animal_intake
+    return trainI,testI,ground_truth
 
 
 
-def PredictOutcome():
+def PredictOutcome(trainI,testI,ground_truth):
 
-    RandomTreesClassifier
+    trainclass = np.array(trainI['OutcomeType'].copy())
+    trainI = trainI.drop(labels=['OutcomeType','AnimalID'],axis=1)
+    testI = testI.drop(labels=['AnimalID'],axis=1)
+
+    rand_clf = RandomForestClassifier()
+    rand_clf.fit(trainI,trainclass)
+    for i in testI:
+        pred = rand_clf.predict(i)
+        print(pred)
 
     return 0
 
