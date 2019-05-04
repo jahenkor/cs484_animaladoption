@@ -1,5 +1,5 @@
 import numpy as np
-import sklearn.ensemble import RnadomForestClassifier
+from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import matplotlib
 matplotlib.use('agg')
@@ -12,14 +12,17 @@ from datetime import date
 def main():
 
 
+    #Load Data
     animal_intake, animal_outcome = LoadData()
+
+    #Preprocessed dataset (Pandas dataframe)
     processed_dataset = PreprocessData(animal_outcome,animal_intake)
 
 
 
     return 0
 
-#Will comment tonight
+#Load Data
 def LoadData():
 
     animal_intake = pd.read_csv("dataset/Austin_Animal_Center_Intakes.csv")
@@ -30,9 +33,6 @@ def LoadData():
     animal_outcome.columns = [x.replace(' ','') for x in animal_outcome.columns]
 
 
-    print(animal_outcome)
-    print(animal_intake)
-    print(animal_intake.columns)
 
     #Sort both datasets
     animal_intake = animal_intake.sort_values('AnimalID')
@@ -66,30 +66,22 @@ def BreakDates(animal_intake):
     for i in animal_intake['DayOfWeek_Outcomes']:
         if i == "nan":
             continue
-        print(j)
         j += 1
-        print(i)
         dateSplit = i.split('/')
-        #print(dateSplit)
         real_date = date(int(dateSplit[2]),int(dateSplit[0]),int(dateSplit[1]))
-        #print(real_date.weekday())
         dayOfWeek.append(real_date.weekday())
     animal_intake['DayOfWeek_Outcomes'] = dayOfWeek
     j = 0
     dayOfWeek = []
     for i in animal_intake['DayOfWeek_Intakes']:
-        print(j)
         j += 1
         dateSplit = i.split('/')
         #print(dateSplit)
         real_date = date(int(dateSplit[2]),int(dateSplit[0]),int(dateSplit[1]))
-        print(real_date.weekday())
         dayOfWeek.append(real_date.weekday())
     animal_intake['DayOfWeek_Intakes'] = dayOfWeek
 
 
-    print(animal_intake['DayOfWeek_Outcomes'])
-    print(animal_intake['DayOfWeek_Intakes'])
 
 
 
@@ -108,12 +100,6 @@ def BreakDates(animal_intake):
 #V2: Gooooes faster now
 def PreprocessData(animal_outcome,animal_intake):
 
-    print(animal_outcome.columns)
-    print(animal_outcome['AnimalID'])
-    print(animal_intake['AnimalID'])
-    #ids = animal_outcome['AnimalID']
-    #print(animal_outcome[ids.isin(ids[ids.duplicated()])].sort_values("AnimalID"))
-    #print(animal_outcome.groupby("AnimalID").count())
 
     #Cats,Birds,Dogs only
     animal_intake = animal_intake[animal_intake.AnimalType != "Other"]
@@ -121,14 +107,12 @@ def PreprocessData(animal_outcome,animal_intake):
 
    #Name Field
     #Boolean
-    #animal_intake['Name'].dropna(axis=0, how='any', inplace=True)
 
     animal_intake['Name'].fillna('No')
     names = []
     for i in range(len(animal_intake['Name'])):
         print("Changing Name: %d" % i)
         if animal_intake['Name'].iloc[i] != 'No':
-            #animal_intake['Name'].iloc[i] = 'Yes'
             names.append("Yes")
         else:
             names.append("No")
@@ -154,10 +138,6 @@ def PreprocessData(animal_outcome,animal_intake):
     animal_outcome = animal_outcome.drop(columns=dropListOutcome)
     animal_outcome.dropna(inplace=True)
     animal_intake.dropna(inplace=True)
-    print(animal_intake['Name'])
-    print(animal_intake['DateTime'])
-    print(animal_outcome['DateTime'])
-
 
     #Remove missing values
     animal_intake.dropna(inplace=True)
@@ -196,18 +176,15 @@ def PreprocessData(animal_outcome,animal_intake):
     #Gets last entry for animalID
     animal_outcome = animal_outcome.sort_values('DateTime').drop_duplicates('AnimalID',keep='last')
     animal_intake = animal_intake.sort_values('DateTime').drop_duplicates('AnimalID',keep='last')
-    print(name_freq)
     animal_intake = animal_intake.merge(name_freq,on=['AnimalID'],how='right')
     animal_intake = animal_intake.rename(index=str, columns={"NameFreq_y":"NumberOfAdmits"})
     animal_intake
     animal_intake = animal_intake.drop(['NameFreq_x'],axis=1)
 
-    print(animal_intake.sort_values('AnimalID'))
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(animal_intake[:10])
 
 
-    print(name_freq)
     #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         #print(animal_outcome[:10])
         #print(animal_intake[:10])
@@ -217,14 +194,8 @@ def PreprocessData(animal_outcome,animal_intake):
     #dataset = pd.merge(dataset, name_freq, on=["AnimalID"], how="inner")
 
 
-    print(dataset['AnimalID'])
-    print(name_freq.shape)
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(dataset[:10])
-    print(animal_outcome.shape)
-    print(animal_intake.shape)
-    print(dataset.shape)
-    print(name_freq.shape)
     dataset.dropna(inplace=True)
 
 
@@ -255,7 +226,6 @@ def PreprocessData(animal_outcome,animal_intake):
 
 
 
-    print(dataset)
 #    print(dataset['MonthYear_x'].drop_duplicates(keep='last'))
     #print(name_freq)
     #dataset['NameFreq'] = name_freq
@@ -313,11 +283,7 @@ def PreprocessData(animal_outcome,animal_intake):
 
 
 
-    print(len(ageUponIntake))
-    print(animal_intake.shape)
     animal_intake['AgeuponIntake'] = ageUponIntake
-    print(animal_intake['AgeuponIntake'])
-    print(ageUponIntake)
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(dataset[:10])
 
@@ -331,14 +297,13 @@ def PreprocessData(animal_outcome,animal_intake):
 #Split sex upon intake as Gender, and intactness
     animal_intake['Intactness'], animal_intake['Gender'] = animal_intake['SexuponIntake'].str.split(' ',1).str
     animal_intake.drop(['SexuponIntake'],axis=1,inplace=True)
-    print(animal_intake.columns)
     #End break up SexuponIntake into Gender and Intactness
 
 
     #Map down colors into color_list
     colorset=[]
     colorsForList = []
-    color_list = ['Brown','White','Red','Blue','Black','Orange','Yellow','Tan','Tortie','Tricolor','Chocolate',"Calico","Gold","Cream","Gray"]
+    color_list = {'Brown':'Brown','White':'White','Red':'Red','Blue':'Blue','Black':'Black','Orange':'Orange','Yellow':'Yellow','Tan':'Brown','Tortie':"Brown/Black",'Tricolor':'Mixed','Chocolate':'Brown',"Calico":"Brown/White","Gold":'Yellow','Cream':'Brown','Gray':'Black','Gray':'Gray','Agouti':'Brown','Apricot':'Orange','Buff':'Tan','Fawn':'Tan','Flame Point':'White','Green':'Green','Silver':'Gray','Seal':'Black/White','Pink':'Red','Lilac Point':'White','Liver':'Red','Lynx Point':'Black/White','Sable':'Black','Torbie':'Gray'}
 
     #for i in animal_intake['Color']:
      #   if i in colorset:
@@ -347,6 +312,7 @@ def PreprocessData(animal_outcome,animal_intake):
 #            colorset.append(i)
 
     colors = animal_intake['Color']
+
     nope=[]
     print(len(colors))
     for i in range(len(colors)):
@@ -355,10 +321,10 @@ def PreprocessData(animal_outcome,animal_intake):
         if any(elem in colors.iloc[i] for elem in color_list):
             #Choose a unique color for element
             colorsChosen = False
-            for j in color_list:
-                if j in colors.iloc[i]:
+            for x,y in color_list.items():
+                if x in colors.iloc[i]:
                     if(not(colorsChosen)):
-                        colorsForList.append(j)
+                        colorsForList.append(y)
                         colorsChosen=True
 
         else:
@@ -366,61 +332,43 @@ def PreprocessData(animal_outcome,animal_intake):
             nope.append(colors.iloc[i])
             colorsForList.append("Other")
 
-    print("nope colors %s"%nope)
-    print(len(colors))
-    print(len(colorsForList))
-    print(len(nope))
+
     animal_intake['Color'] = colorsForList
-    print("Updated color column %s" % colors)
     #End change colors snippet
 
 
 
-    print(animal_intake)
 
 
-    #Map down Breed into breed_list
-'''
-    colorset=[]
-    colorsForList = []
-    color_list = ['Hound','Pitbull','German Shepherd']
 
-    #for i in animal_intake['Color']:
-     #   if i in colorset:
-      #      continue
-       # else:
-#            colorset.append(i)
+    #Map down Breeds into breed_list - Lots of breeds!
+    breedsForList = []
+    breed_list = {'Pit Bull':'Working','German Shepherd':'Herding','Hound':'Hound','Chihuahua':'Companion','Domestic Shorthair':'Common','Labrador':'Sporting'}
+    breeds = animal_intake['Breed']
 
-    colors = animal_intake['Breed']
     nope=[]
-    print(len(colors))
-    for i in range(len(colors)):
+    for i in range(len(breeds)):
         print(i)
 
-        if any(elem in colors.iloc[i] for elem in color_list):
+        if any(elem in breeds.iloc[i] for elem in breed_list):
             #Choose a unique color for element
-            colorsChosen = False
-            for j in color_list:
-                if j in colors.iloc[i]:
-                    if(not(colorsChosen)):
-                        colorsForList.append(j)
-                        colorsChosen=True
+            breedsChosen = False
+            for x,y in breed_list.items():
+                if x in breeds.iloc[i]:
+                    if(not(breedsChosen)):
+                        breedsForList.append(y)
+                        breedsChosen=True
 
         else:
-            print("nope %s" % colors.iloc[i])
-            nope.append(colors.iloc[i])
-            colorsForList.append("Other")
+            print("nope %s" % breeds.iloc[i])
+            nope.append(breeds.iloc[i])
+            breedsForList.append("Other")
 
-    print("nope colors %s"%nope)
-    print(len(colors))
-    print(len(colorsForList))
-    print(len(nope))
-    animal_intake['Breed'] = colorsForList
-    print("Updated color column %s" % colors)
+    print("nope breeds %s"%nope)
+
+    animal_intake['Breed'] = breedsForList
+    print(animal_intake.Breed.unique())
     #End change colors snippet
-
-
-'''
 
 
 
@@ -439,5 +387,7 @@ def PredictOutcome():
     return 0
 
 
+
+################### HELPER FUNCTIONS and Data Structures########################################
 
 main()
