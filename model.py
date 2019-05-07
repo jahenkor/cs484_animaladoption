@@ -51,13 +51,22 @@ def BreakDates(animal_intake):
     animal_intake['Date_Outcomes'], animal_intake['Time_Outcomes'] = animal_intake['DateTime_x'].str.split(' ',1).str
     animal_intake['Date_Intakes'], animal_intake['Time_Intakes'] = animal_intake['DateTime_y'].str.split(' ',1).str
 
+    animal_intake['Time_Intakes'],time1,time2 = animal_intake['Time_Intakes'].str.split(':',3).str
+    animal_intake['Time_Outcomes'],time1,time2 = animal_intake['Time_Outcomes'].str.split(':',3).str
+
+
+
+
     animal_intake['DayOfWeek_Outcomes'] = animal_intake['Date_Outcomes'].copy()
     animal_intake['DayOfWeek_Intakes'] = animal_intake['Date_Intakes'].copy()
 
     animal_intake.drop(['DateTime_y'],axis=1, inplace=True)
     animal_intake.drop(['DateTime_x'],axis=1, inplace=True)
+    animal_intake.drop(['Date_Outcomes'],axis=1, inplace=True)
+    animal_intake.drop(['Date_Intakes'],axis=1, inplace=True)
 
-    print(animal_intake['Date_Outcomes'])
+
+
     print(animal_intake['DayOfWeek_Outcomes'])
 
 
@@ -136,18 +145,18 @@ def PreprocessData(animal_outcome,animal_intake):
     dropListOutcome = ['DateofBirth','MonthYear','OutcomeSubtype','Name','AnimalType',"Color","Breed"]
     animal_intake = animal_intake.drop(columns=dropListIntake)
     animal_outcome = animal_outcome.drop(columns=dropListOutcome)
-    animal_outcome.dropna(inplace=True)
-    animal_intake.dropna(inplace=True)
+    animal_outcome = animal_outcome.dropna(inplace=False)
+    animal_intake = animal_intake.dropna(inplace=False)
 
     #Remove missing values
-    animal_intake.dropna(inplace=True)
-    animal_outcome.dropna(inplace=True)
+    animal_intake = animal_intake.dropna(inplace=False)
+    animal_outcome = animal_outcome.dropna(inplace=False)
 
 
 
 
     isAggressive = []
-    isMix = []
+    Mixed = []
     for i in range(len(animal_intake['Breed'])):
         print(i)
         if("Pit Bull" in animal_intake['Breed'].iloc[i]):
@@ -155,31 +164,32 @@ def PreprocessData(animal_outcome,animal_intake):
         else:
             isAggressive.append("No")
         if("Mix" in animal_intake['Breed'].iloc[i]):
-            isMix.append("Yes")
+            Mixed.append("Yes")
         else:
-            isMix.append("No")
-    animal_intake['isAggressive'] = isAggressive
-    animal_intake['isMix'] = isMix
-    print(animal_intake['isMix'])
-    print(animal_intake['isAggressive'])
+            Mixed.append("No")
+    animal_intake['Aggressive'] = isAggressive
+    animal_intake['Mixed'] = Mixed
+    print(animal_intake['Mixed'])
+    print(animal_intake['Aggressive'])
+    animal_intake = animal_intake.drop(['Breed'],axis=1, inplace=False)
+
 
 
     #Name Frequency
-    animal_intake['NameFreq'] = np.ones((animal_intake.shape)[0])
+    animal_intake['NameRecurrence'] = np.ones((animal_intake.shape)[0])
 
 
     #Aggregate Name Frequency
-    name_freq = animal_intake.groupby('AnimalID')['NameFreq'].count()
-    print(name_freq)
+    name_rec = animal_intake.groupby('AnimalID')['NameRecurrence'].count()
+    print(name_rec)
 
 
     #Gets last entry for animalID
     animal_outcome = animal_outcome.sort_values('DateTime').drop_duplicates('AnimalID',keep='last')
     animal_intake = animal_intake.sort_values('DateTime').drop_duplicates('AnimalID',keep='last')
-    animal_intake = animal_intake.merge(name_freq,on=['AnimalID'],how='right')
-    animal_intake = animal_intake.rename(index=str, columns={"NameFreq_y":"NumberOfAdmits"})
-    animal_intake
-    animal_intake = animal_intake.drop(['NameFreq_x'],axis=1)
+    animal_intake = animal_intake.merge(name_rec,on=['AnimalID'],how='right')
+    animal_intake = animal_intake.rename(index=str, columns={"NameRecurrence_y":"NumberOfAdmits"})
+    animal_intake = animal_intake.drop(['NameRecurrence_x'],axis=1)
 
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(animal_intake[:10])
@@ -196,7 +206,7 @@ def PreprocessData(animal_outcome,animal_intake):
 
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(dataset[:10])
-    dataset.dropna(inplace=True)
+    dataset = dataset.dropna(inplace=False)
 
 
 
@@ -250,21 +260,21 @@ def PreprocessData(animal_outcome,animal_intake):
     for i in range(len(animal_intake['AgeuponIntake'])):
         if "months" in animal_intake['AgeuponIntake'].iloc[i] or "month" in animal_intake['AgeuponIntake'].iloc[i]:
             fixed_time = int((animal_intake['AgeuponIntake'].iloc[i])[0]) * 30.417
-            ageUponIntake.append(str(fixed_time) + " days")
+            ageUponIntake.append(str(fixed_time))
             continue
         if "years" in animal_intake['AgeuponIntake'].iloc[i] or "year" in animal_intake['AgeuponIntake'].iloc[i]:
             fixed_time = int((animal_intake['AgeuponIntake'].iloc[i])[0]) * 365
-            ageUponIntake.append(str(fixed_time) + " days")
+            ageUponIntake.append(str(fixed_time))
             continue
 
         if "weeks" in animal_intake['AgeuponIntake'].iloc[i]:
             fixed_time = int((animal_intake['AgeuponIntake'].iloc[i])[0]) * 7
-            ageUponIntake.append(str(fixed_time) + " days")
+            ageUponIntake.append(str(fixed_time))
             continue
 
         if "week" in animal_intake['AgeuponIntake'].iloc[i]:
             fixed_time = int((animal_intake['AgeuponIntake'].iloc[i])[0]) * 7
-            ageUponIntake.append(str(fixed_time) + " days")
+            ageUponIntake.append(str(fixed_time))
             continue
 
         if "days" in animal_intake['AgeuponIntake'].iloc[i]:
@@ -275,7 +285,35 @@ def PreprocessData(animal_outcome,animal_intake):
             ageUponIntake.append(animal_intake['AgeuponIntake'].iloc[i])
             continue
 
-        print(animal_intake['AgeuponIntake'].iloc[i])
+    ageUponOutcome = []
+    for i in range(len(animal_intake['AgeuponOutcome'])):
+
+        if "months" in animal_intake['AgeuponOutcome'].iloc[i] or "month" in animal_intake['AgeuponOutcome'].iloc[i]:
+            fixed_time = int((animal_intake['AgeuponOutcome'].iloc[i])[0]) * 30.417
+            ageUponOutcome.append(str(fixed_time))
+            continue
+        if "years" in animal_intake['AgeuponOutcome'].iloc[i] or "year" in animal_intake['AgeuponOutcome'].iloc[i]:
+            fixed_time = int((animal_intake['AgeuponOutcome'].iloc[i])[0]) * 365
+            ageUponOutcome.append(str(fixed_time))
+            continue
+
+        if "weeks" in animal_intake['AgeuponOutcome'].iloc[i]:
+            fixed_time = int((animal_intake['AgeuponOutcome'].iloc[i])[0]) * 7
+            ageUponOutcome.append(str(fixed_time))
+            continue
+
+        if "week" in animal_intake['AgeuponOutcome'].iloc[i]:
+            fixed_time = int((animal_intake['AgeuponOutcome'].iloc[i])[0]) * 7
+            ageUponOutcome.append(str(fixed_time))
+            continue
+
+        if "days" in animal_intake['AgeuponOutcome'].iloc[i]:
+            ageUponOutcome.append(animal_intake['AgeuponOutcome'].iloc[i])
+            continue
+
+        if "day" in animal_intake['AgeuponOutcome'].iloc[i]:
+            ageUponOutcome.append(animal_intake['AgeuponOutcome'].iloc[i])
+            continue
 
 
 
@@ -283,6 +321,9 @@ def PreprocessData(animal_outcome,animal_intake):
 
 
 
+
+
+    animal_intake['AgeuponOutcome'] = ageUponOutcome
     animal_intake['AgeuponIntake'] = ageUponIntake
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(dataset[:10])
@@ -340,35 +381,6 @@ def PreprocessData(animal_outcome,animal_intake):
 
 
 
-
-    #Map down Breeds into breed_list - Lots of breeds!
-    breedsForList = []
-    breed_list = {'Pit Bull':'Working','German Shepherd':'Herding','Hound':'Hound','Chihuahua':'Companion','Domestic Shorthair':'Common','Labrador':'Sporting'}
-    breeds = animal_intake['Breed']
-
-    nope=[]
-    for i in range(len(breeds)):
-        print(i)
-
-        if any(elem in breeds.iloc[i] for elem in breed_list):
-            #Choose a unique color for element
-            breedsChosen = False
-            for x,y in breed_list.items():
-                if x in breeds.iloc[i]:
-                    if(not(breedsChosen)):
-                        breedsForList.append(y)
-                        breedsChosen=True
-
-        else:
-            print("nope %s" % breeds.iloc[i])
-            nope.append(breeds.iloc[i])
-            breedsForList.append("Other")
-
-    print("nope breeds %s"%nope)
-
-    animal_intake['Breed'] = breedsForList
-    print(animal_intake.Breed.unique())
-    #End change colors snippet
 
 
 
