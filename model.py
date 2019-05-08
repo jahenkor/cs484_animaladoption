@@ -6,14 +6,16 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from datetime import date
+from datetime import date, datetime
 from sklearn.metrics import r2_score
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
 import os
+import math
 
 
+#Remove file path from disk, to make new processed dataset
 PROC_DATASET= 'dataset/procdataset.csv'
 
 def main():
@@ -42,6 +44,9 @@ def main():
         print(x)
         printGraphics(processed_dataset,x)
 '''
+
+    train, test = train_test_split(processed_dataset, train_size =0.33, shuffle=False)
+
     return 0
 
 
@@ -71,6 +76,7 @@ def LoadData(isProcessed):
 
 
 def BreakDates(animal_intake):
+    fmt = '%m/%d/%Y %I:%M:%S %p'
     # Break dates, include Day of Week, Time
     animal_intake['Date_Outcomes'], animal_intake['Time_Outcomes'] = animal_intake['DateTime_x'].str.split(' ', 1).str
     animal_intake['Date_Intakes'], animal_intake['Time_Intakes'] = animal_intake['DateTime_y'].str.split(' ', 1).str
@@ -81,12 +87,33 @@ def BreakDates(animal_intake):
     animal_intake['DayOfWeek_Outcomes'] = animal_intake['Date_Outcomes'].copy()
     animal_intake['DayOfWeek_Intakes'] = animal_intake['Date_Intakes'].copy()
 
+    print(datetime.strptime(animal_intake['DateTime_y'].iloc[1],fmt))
+
+    LengthOfStay = []
+    k = 0
+    for i in animal_intake['DateTime_y']:
+        d1 = datetime.strptime(i,fmt)
+        d2 = datetime.strptime(animal_intake['DateTime_x'].iloc[k],fmt)
+        diff = (d1-d2).days
+        minutesDiff = diff*24*60
+        LengthOfStay.append(math.sqrt(minutesDiff**2)) #L2 norm
+        k+=1
+    animal_intake['LengthOfStay'] = LengthOfStay
+
+
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        print(animal_intake[:10])
+
+
+#    exit(0)
+
     animal_intake.drop(['DateTime_y'], axis=1, inplace=True)
     animal_intake.drop(['DateTime_x'], axis=1, inplace=True)
     animal_intake.drop(['Date_Outcomes'], axis=1, inplace=True)
     animal_intake.drop(['Date_Intakes'], axis=1, inplace=True)
 
     print(animal_intake['DayOfWeek_Outcomes'])
+
 
     dayOfWeek = []
     j = 0
@@ -107,6 +134,7 @@ def BreakDates(animal_intake):
         real_date = date(int(dateSplit[2]), int(dateSplit[0]), int(dateSplit[1]))
         dayOfWeek.append(real_date.weekday())
     animal_intake['DayOfWeek_Intakes'] = dayOfWeek
+    exit(0)
 
     #       #Remove backslashes from Date
     # for i in range(len(animal_intake['Date'])):
@@ -351,7 +379,15 @@ def PredictOutcome():
     return 0
 
 
-def PredictDays(animal_dataset):
+def RandForestRegr(train, labels,test):
+
+
+    regr = RandomForestRegressor(max_depth = 2, n_estimators=100)
+    regr.fit(train,labels)
+    print("Regr feature importances")
+    print(regr.feature_importances_)
+    print(regr.predict(test))
+
     return 0
 
 
@@ -380,4 +416,5 @@ def printGraphics(animal_dataset, feature):
     plt.show()
 
     return 0;
+
 main()
