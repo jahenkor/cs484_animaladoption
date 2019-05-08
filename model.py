@@ -14,27 +14,43 @@ PROC_DATASET= 'dataset/procdataset.csv'
 
 def main():
 
-   # Load Data
-    animal_intake, animal_outcome = LoadData()
-
     #Check if preprocessed dataset exists, if not perform preprocessing steps
-
-    exists = os.path.isfile('dataset/procdataset.csv')
+    #Don't waste time on preproc step
+    processed_dataset = 0
+    exists = os.path.isfile(PROC_DATASET)
     if not(exists):
+
+        # Load Data
+        animal_intake, animal_outcome = LoadData(False)
         # Preprocessed dataset (Pandas dataframe)
         processed_dataset = PreprocessData(animal_outcome, animal_intake)
         print(processed_dataset)
-        exit(0)
         SaveProcDatasetToDisk(processed_dataset)
+    else:
+        processed_dataset = LoadData(True)
 
 
-#    printGraphics(processed_dataset)
+    features = np.array(processed_dataset.columns.values)
+    features = np.delete(features, 0, 0)
 
+    '''
+    for x in features:
+        print(x)
+        printGraphics(processed_dataset,x)
+'''
     return 0
 
 
 # Load Data
-def LoadData():
+def LoadData(isProcessed):
+    if(isProcessed):
+        animal_intake = pd.read_csv(PROC_DATASET)
+        animal_intake.columns = [x.replace(' ', '') for x in animal_intake.columns]
+        animal_intake = animal_intake.sort_values('AnimalID')
+
+        return animal_intake
+
+
     animal_intake = pd.read_csv("dataset/Austin_Animal_Center_Intakes.csv")
     animal_outcome = pd.read_csv("dataset/Austin_Animal_Center_Outcomes.csv")
 
@@ -46,9 +62,6 @@ def LoadData():
     animal_intake = animal_intake.sort_values('AnimalID')
     animal_outcome = animal_outcome.sort_values('AnimalID')
 
-    # Train/test split
-    trainI, testI = train_test_split(animal_intake, train_size=0.01, shuffle=False)
-    trainO, testO = train_test_split(animal_outcome, train_size=0.01, shuffle=False)
 
     return animal_intake, animal_outcome
 
@@ -325,7 +338,7 @@ def PreprocessData(animal_outcome, animal_intake):
     return animal_intake
 
 def SaveProcDatasetToDisk(dataset):
-    print(dataset.to_csv(path_or_buf=PROC_DATASET))
+    dataset.to_csv(path_or_buf=PROC_DATASET)
     return 0
 
 def PredictOutcome():
