@@ -3,27 +3,32 @@ from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import matplotlib
 
-matplotlib.use('tkagg')
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from datetime import date
+import os
 
 
-if sys.version_info[0] == 3:
-    # for Python3
-    from tkinter import *   ## notice lowercase 't' in tkinter here
-else:
-    # for Python2
-    from Tkinter import *   ## notice capitalized T in Tkinter
+PROC_DATASET= 'dataset/procdataset.csv'
 
 def main():
 
    # Load Data
     animal_intake, animal_outcome = LoadData()
 
-    # Preprocessed dataset (Pandas dataframe)
-    processed_dataset = PreprocessData(animal_outcome, animal_intake)
-    printGraphics(processed_dataset)
+    #Check if preprocessed dataset exists, if not perform preprocessing steps
+
+    exists = os.path.isfile('dataset/procdataset.csv')
+    if not(exists):
+        # Preprocessed dataset (Pandas dataframe)
+        processed_dataset = PreprocessData(animal_outcome, animal_intake)
+        print(processed_dataset)
+        exit(0)
+        SaveProcDatasetToDisk(processed_dataset)
+
+
+#    printGraphics(processed_dataset)
 
     return 0
 
@@ -315,8 +320,13 @@ def PreprocessData(animal_outcome, animal_intake):
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(animal_intake[:10])
 
+
+
     return animal_intake
 
+def SaveProcDatasetToDisk(dataset):
+    print(dataset.to_csv(path_or_buf=PROC_DATASET))
+    return 0
 
 def PredictOutcome():
     RandomTreesClassifier
@@ -328,7 +338,7 @@ def PredictDays(animal_dataset):
     return 0
 
 
-def printGraphics(animal_dataset):
+def printGraphics(animal_dataset, feature):
     ScanFeature = "OutcomeType"
     OutcomeTypes = animal_dataset.OutcomeType.unique()
     values = np.zeros(OutcomeTypes.shape)
