@@ -10,6 +10,7 @@ from datetime import date, datetime
 from sklearn.metrics import r2_score
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold
+from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
 import os
 import math
@@ -24,13 +25,13 @@ def main():
     #Don't waste time on preproc step
     processed_dataset = 0
     exists = os.path.isfile(PROC_DATASET)
+    print(exists)
     if not(exists):
 
         # Load Data
         animal_intake, animal_outcome = LoadData(False)
         # Preprocessed dataset (Pandas dataframe)
         processed_dataset = PreprocessData(animal_outcome, animal_intake)
-        print(processed_dataset)
         SaveProcDatasetToDisk(processed_dataset)
     else:
         processed_dataset = LoadData(True)
@@ -47,6 +48,12 @@ def main():
 
     train, test = train_test_split(processed_dataset, train_size =0.33, shuffle=False)
 
+    RandForestRegr(train,test)
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        print(processed_dataset[:10])
+
+
+
     return 0
 
 
@@ -55,7 +62,6 @@ def LoadData(isProcessed):
     if(isProcessed):
         animal_intake = pd.read_csv(PROC_DATASET)
         animal_intake.columns = [x.replace(' ', '') for x in animal_intake.columns]
-        animal_intake = animal_intake.sort_values('AnimalID')
 
         return animal_intake
 
@@ -70,6 +76,7 @@ def LoadData(isProcessed):
     # Sort both datasets
     animal_intake = animal_intake.sort_values('AnimalID')
     animal_outcome = animal_outcome.sort_values('AnimalID')
+
 
 
     return animal_intake, animal_outcome
@@ -272,11 +279,11 @@ def PreprocessData(animal_outcome, animal_intake):
             continue
 
         if "days" in animal_intake['AgeuponIntake'].iloc[i]:
-            ageUponIntake.append(animal_intake['AgeuponIntake'].iloc[i])
+            ageUponIntake.append(animal_intake['AgeuponIntake'].iloc[i][0])
             continue
 
         if "day" in animal_intake['AgeuponIntake'].iloc[i]:
-            ageUponIntake.append(animal_intake['AgeuponIntake'].iloc[i])
+            ageUponIntake.append(animal_intake['AgeuponIntake'].iloc[i][0])
             continue
 
     ageUponOutcome = []
@@ -302,11 +309,11 @@ def PreprocessData(animal_outcome, animal_intake):
             continue
 
         if "days" in animal_intake['AgeuponOutcome'].iloc[i]:
-            ageUponOutcome.append(animal_intake['AgeuponOutcome'].iloc[i])
+            ageUponOutcome.append(animal_intake['AgeuponOutcome'].iloc[i][0])
             continue
 
         if "day" in animal_intake['AgeuponOutcome'].iloc[i]:
-            ageUponOutcome.append(animal_intake['AgeuponOutcome'].iloc[i])
+            ageUponOutcome.append(animal_intake['AgeuponOutcome'].iloc[i][0])
             continue
 
     animal_intake['AgeuponOutcome'] = ageUponOutcome
@@ -360,6 +367,20 @@ def PreprocessData(animal_outcome, animal_intake):
     animal_intake['Color'] = colorsForList
     # End change colors snippet
 
+    #Remove Animal ID
+    animal_intake = animal_intake.drop(columns=['AnimalID'])
+
+    #Change categorical to numerical values
+    columnsEncode = ['OutcomeType','SexuponOutcome','Name','IntakeType','IntakeCondition','AnimalType', 'Color', 'Aggressive', 'Mixed', 'Intactness', 'Gender']
+    le = LabelEncoder()
+    animal_intake = animal_intake.dropna(inplace=False)
+
+
+    #animal_intake[columnsEncode].apply(le.fit_transform))
+    map = []
+    for i in columnsEncode:
+        animal_intake[i] = animal_intake.apply(le.fit_transform)
+    #Encode each categorical
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(animal_intake[:10])
 
@@ -368,7 +389,7 @@ def PreprocessData(animal_outcome, animal_intake):
     return animal_intake
 
 def SaveProcDatasetToDisk(dataset):
-    dataset.to_csv(path_or_buf=PROC_DATASET)
+    dataset.to_csv(path_or_buf=PROC_DATASET,index=False)
     return 0
 
 def PredictOutcome():
@@ -377,10 +398,21 @@ def PredictOutcome():
     return 0
 
 
-def RandForestRegr(train, labels,test):
+def RandForestRegr(train,test):
 
 
-    regr = RandomForestRegressor(max_depth = 2, n_estimators=100)
+    labels = train['LengthOfStay'].copy(deep=True)
+
+    test = test.drop(columns=['LengthOfStay'])
+
+    train = train.drop(columns=['LengthOfStay'])
+
+    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        print(train[:10])
+
+
+
+    regr = RandomForestRegressor(max_depth = 15, n_estimators=100)
     regr.fit(train,labels)
     print("Regr feature importances")
     print(regr.feature_importances_)
