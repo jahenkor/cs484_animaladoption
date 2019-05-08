@@ -105,7 +105,6 @@ def BreakDates(animal_intake):
         print(animal_intake[:10])
 
 
-#    exit(0)
 
     animal_intake.drop(['DateTime_y'], axis=1, inplace=True)
     animal_intake.drop(['DateTime_x'], axis=1, inplace=True)
@@ -134,7 +133,6 @@ def BreakDates(animal_intake):
         real_date = date(int(dateSplit[2]), int(dateSplit[0]), int(dateSplit[1]))
         dayOfWeek.append(real_date.weekday())
     animal_intake['DayOfWeek_Intakes'] = dayOfWeek
-    exit(0)
 
     #       #Remove backslashes from Date
     # for i in range(len(animal_intake['Date'])):
