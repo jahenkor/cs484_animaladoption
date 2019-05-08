@@ -2,73 +2,69 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import matplotlib
-matplotlib.use('agg')
+
+matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from datetime import date
 
 
+if sys.version_info[0] == 3:
+    # for Python3
+    from tkinter import *   ## notice lowercase 't' in tkinter here
+else:
+    # for Python2
+    from Tkinter import *   ## notice capitalized T in Tkinter
 
 def main():
 
-
-    #Load Data
+   # Load Data
     animal_intake, animal_outcome = LoadData()
 
-    #Preprocessed dataset (Pandas dataframe)
-    processed_dataset = PreprocessData(animal_outcome,animal_intake)
-
-
+    # Preprocessed dataset (Pandas dataframe)
+    processed_dataset = PreprocessData(animal_outcome, animal_intake)
+    printGraphics(processed_dataset)
 
     return 0
 
-#Load Data
-def LoadData():
 
+# Load Data
+def LoadData():
     animal_intake = pd.read_csv("dataset/Austin_Animal_Center_Intakes.csv")
     animal_outcome = pd.read_csv("dataset/Austin_Animal_Center_Outcomes.csv")
 
-    #removing spaces in fieldnames so their easier to work with
+    # removing spaces in fieldnames so their easier to work with
     animal_intake.columns = [x.replace(' ', '') for x in animal_intake.columns]
-    animal_outcome.columns = [x.replace(' ','') for x in animal_outcome.columns]
+    animal_outcome.columns = [x.replace(' ', '') for x in animal_outcome.columns]
 
-
-
-    #Sort both datasets
+    # Sort both datasets
     animal_intake = animal_intake.sort_values('AnimalID')
     animal_outcome = animal_outcome.sort_values('AnimalID')
 
-
-    #Train/test split
-    trainI, testI = train_test_split(animal_intake, train_size = 0.01,shuffle=False)
-    trainO, testO = train_test_split(animal_outcome,train_size=0.01, shuffle=False)
+    # Train/test split
+    trainI, testI = train_test_split(animal_intake, train_size=0.01, shuffle=False)
+    trainO, testO = train_test_split(animal_outcome, train_size=0.01, shuffle=False)
 
     return animal_intake, animal_outcome
 
+
 def BreakDates(animal_intake):
+    # Break dates, include Day of Week, Time
+    animal_intake['Date_Outcomes'], animal_intake['Time_Outcomes'] = animal_intake['DateTime_x'].str.split(' ', 1).str
+    animal_intake['Date_Intakes'], animal_intake['Time_Intakes'] = animal_intake['DateTime_y'].str.split(' ', 1).str
 
-# Break dates, include Day of Week, Time
-    animal_intake['Date_Outcomes'], animal_intake['Time_Outcomes'] = animal_intake['DateTime_x'].str.split(' ',1).str
-    animal_intake['Date_Intakes'], animal_intake['Time_Intakes'] = animal_intake['DateTime_y'].str.split(' ',1).str
-
-    animal_intake['Time_Intakes'],time1,time2 = animal_intake['Time_Intakes'].str.split(':',3).str
-    animal_intake['Time_Outcomes'],time1,time2 = animal_intake['Time_Outcomes'].str.split(':',3).str
-
-
-
+    animal_intake['Time_Intakes'], time1, time2 = animal_intake['Time_Intakes'].str.split(':', 3).str
+    animal_intake['Time_Outcomes'], time1, time2 = animal_intake['Time_Outcomes'].str.split(':', 3).str
 
     animal_intake['DayOfWeek_Outcomes'] = animal_intake['Date_Outcomes'].copy()
     animal_intake['DayOfWeek_Intakes'] = animal_intake['Date_Intakes'].copy()
 
-    animal_intake.drop(['DateTime_y'],axis=1, inplace=True)
-    animal_intake.drop(['DateTime_x'],axis=1, inplace=True)
-    animal_intake.drop(['Date_Outcomes'],axis=1, inplace=True)
-    animal_intake.drop(['Date_Intakes'],axis=1, inplace=True)
-
-
+    animal_intake.drop(['DateTime_y'], axis=1, inplace=True)
+    animal_intake.drop(['DateTime_x'], axis=1, inplace=True)
+    animal_intake.drop(['Date_Outcomes'], axis=1, inplace=True)
+    animal_intake.drop(['Date_Intakes'], axis=1, inplace=True)
 
     print(animal_intake['DayOfWeek_Outcomes'])
-
 
     dayOfWeek = []
     j = 0
@@ -77,7 +73,7 @@ def BreakDates(animal_intake):
             continue
         j += 1
         dateSplit = i.split('/')
-        real_date = date(int(dateSplit[2]),int(dateSplit[0]),int(dateSplit[1]))
+        real_date = date(int(dateSplit[2]), int(dateSplit[0]), int(dateSplit[1]))
         dayOfWeek.append(real_date.weekday())
     animal_intake['DayOfWeek_Outcomes'] = dayOfWeek
     j = 0
@@ -85,37 +81,28 @@ def BreakDates(animal_intake):
     for i in animal_intake['DayOfWeek_Intakes']:
         j += 1
         dateSplit = i.split('/')
-        #print(dateSplit)
-        real_date = date(int(dateSplit[2]),int(dateSplit[0]),int(dateSplit[1]))
+        # print(dateSplit)
+        real_date = date(int(dateSplit[2]), int(dateSplit[0]), int(dateSplit[1]))
         dayOfWeek.append(real_date.weekday())
     animal_intake['DayOfWeek_Intakes'] = dayOfWeek
 
-
-
-
-
- #       #Remove backslashes from Date
-   # for i in range(len(animal_intake['Date'])):
+    #       #Remove backslashes from Date
+    # for i in range(len(animal_intake['Date'])):
     #    print(i)
-     #   animal_intake['Date'].iloc[i] = animal_intake['Date'].iloc[i].replace("/","")
-
-
+    #   animal_intake['Date'].iloc[i] = animal_intake['Date'].iloc[i].replace("/","")
 
     return animal_intake
 
 
-
-#V1: Takes a loooong time
-#V2: Gooooes faster now
-def PreprocessData(animal_outcome,animal_intake):
-
-
-    #Cats,Birds,Dogs only
+# V1: Takes a loooong time
+# V2: Gooooes faster now
+def PreprocessData(animal_outcome, animal_intake):
+    # Cats,Birds,Dogs only
     animal_intake = animal_intake[animal_intake.AnimalType != "Other"]
     animal_outcome = animal_outcome[animal_outcome.AnimalType != "Other"]
 
-   #Name Field
-    #Boolean
+    # Name Field
+    # Boolean
 
     animal_intake['Name'].fillna('No')
     names = []
@@ -127,43 +114,31 @@ def PreprocessData(animal_outcome,animal_intake):
             names.append("No")
     animal_intake['Name'] = names
 
+    # End Name conversion
 
+    # Add/Remove/update fields
 
-    #End Name conversion
-
-
-
-
-    #Add/Remove/update fields
-
-
-
-
-
-    dropListIntake = ['FoundLocation','MonthYear']
-    #remove redundant features from outcome dataset
-    dropListOutcome = ['DateofBirth','MonthYear','OutcomeSubtype','Name','AnimalType',"Color","Breed"]
+    dropListIntake = ['FoundLocation', 'MonthYear']
+    # remove redundant features from outcome dataset
+    dropListOutcome = ['DateofBirth', 'MonthYear', 'OutcomeSubtype', 'Name', 'AnimalType', "Color", "Breed"]
     animal_intake = animal_intake.drop(columns=dropListIntake)
     animal_outcome = animal_outcome.drop(columns=dropListOutcome)
     animal_outcome = animal_outcome.dropna(inplace=False)
     animal_intake = animal_intake.dropna(inplace=False)
 
-    #Remove missing values
+    # Remove missing values
     animal_intake = animal_intake.dropna(inplace=False)
     animal_outcome = animal_outcome.dropna(inplace=False)
-
-
-
 
     isAggressive = []
     Mixed = []
     for i in range(len(animal_intake['Breed'])):
         print(i)
-        if("Pit Bull" in animal_intake['Breed'].iloc[i]):
+        if ("Pit Bull" in animal_intake['Breed'].iloc[i]):
             isAggressive.append("Yes")
         else:
             isAggressive.append("No")
-        if("Mix" in animal_intake['Breed'].iloc[i]):
+        if ("Mix" in animal_intake['Breed'].iloc[i]):
             Mixed.append("Yes")
         else:
             Mixed.append("No")
@@ -171,91 +146,62 @@ def PreprocessData(animal_outcome,animal_intake):
     animal_intake['Mixed'] = Mixed
     print(animal_intake['Mixed'])
     print(animal_intake['Aggressive'])
-    animal_intake = animal_intake.drop(['Breed'],axis=1, inplace=False)
+    animal_intake = animal_intake.drop(['Breed'], axis=1, inplace=False)
 
-
-
-    #Name Frequency
+    # Name Frequency
     animal_intake['NameRecurrence'] = np.ones((animal_intake.shape)[0])
 
-
-    #Aggregate Name Frequency
+    # Aggregate Name Frequency
     name_rec = animal_intake.groupby('AnimalID')['NameRecurrence'].count()
     print(name_rec)
 
-
-    #Gets last entry for animalID
-    animal_outcome = animal_outcome.sort_values('DateTime').drop_duplicates('AnimalID',keep='last')
-    animal_intake = animal_intake.sort_values('DateTime').drop_duplicates('AnimalID',keep='last')
-    animal_intake = animal_intake.merge(name_rec,on=['AnimalID'],how='right')
-    animal_intake = animal_intake.rename(index=str, columns={"NameRecurrence_y":"NumberOfAdmits"})
-    animal_intake = animal_intake.drop(['NameRecurrence_x'],axis=1)
+    # Gets last entry for animalID
+    animal_outcome = animal_outcome.sort_values('DateTime').drop_duplicates('AnimalID', keep='last')
+    animal_intake = animal_intake.sort_values('DateTime').drop_duplicates('AnimalID', keep='last')
+    animal_intake = animal_intake.merge(name_rec, on=['AnimalID'], how='right')
+    animal_intake = animal_intake.rename(index=str, columns={"NameRecurrence_y": "NumberOfAdmits"})
+    animal_intake = animal_intake.drop(['NameRecurrence_x'], axis=1)
 
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(animal_intake[:10])
 
+    # with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+    # print(animal_outcome[:10])
+    # print(animal_intake[:10])
 
-    #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-        #print(animal_outcome[:10])
-        #print(animal_intake[:10])
-
-    #Join fields
-    dataset = pd.merge(animal_outcome,animal_intake,on=["AnimalID"], how="right").drop_duplicates()
-    #dataset = pd.merge(dataset, name_freq, on=["AnimalID"], how="inner")
-
+    # Join fields
+    dataset = pd.merge(animal_outcome, animal_intake, on=["AnimalID"], how="right").drop_duplicates()
+    # dataset = pd.merge(dataset, name_freq, on=["AnimalID"], how="inner")
 
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(dataset[:10])
     dataset = dataset.dropna(inplace=False)
 
-
-
-
-
-
     BreakDates(dataset)
-#    dataset = dataset.sort_values('Date_x').drop_duplicates('AnimalID',keep='last')
+    #    dataset = dataset.sort_values('Date_x').drop_duplicates('AnimalID',keep='last')
 
+    # dataset = dataset[['AnimalID','DateTime_x']].drop_duplicates(keep='last'))
+    # print(dataset[['AnimalID','DateTime_y']].drop_duplicates(keep='last'))
 
+    # dataset[['AnimalID','Date_x','Time_x']] = dataset[['AnimalID','Date_x','Time_x']].drop_duplicates(keep='last')
 
+    # dataset[['AnimalID','Date_y','Time_y']] = dataset[['AnimalID','Date_y','Time_y']].drop_duplicates(keep='last')
 
-    #dataset = dataset[['AnimalID','DateTime_x']].drop_duplicates(keep='last'))
-    #print(dataset[['AnimalID','DateTime_y']].drop_duplicates(keep='last'))
-
-
-
-
-    #dataset[['AnimalID','Date_x','Time_x']] = dataset[['AnimalID','Date_x','Time_x']].drop_duplicates(keep='last')
-
-
-    #dataset[['AnimalID','Date_y','Time_y']] = dataset[['AnimalID','Date_y','Time_y']].drop_duplicates(keep='last')
-
-    #dataset.dropna(inplace=True)
+    # dataset.dropna(inplace=True)
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(dataset[:10])
 
+    #    print(dataset['MonthYear_x'].drop_duplicates(keep='last'))
+    # print(name_freq)
+    # dataset['NameFreq'] = name_freq
+    # print(dataset)
+    # print(dataset.columns)
 
-
-#    print(dataset['MonthYear_x'].drop_duplicates(keep='last'))
-    #print(name_freq)
-    #dataset['NameFreq'] = name_freq
-    #print(dataset)
-    #print(dataset.columns)
-
-
-
-
-
-#To fit below code
+    # To fit below code
     animal_intake = dataset
 
-
-
-
-
-
-    #Fix Age (Normalize values to age in days)
-    #Could make neater by using reg expressions
+    # Fix Age (Normalize values to age in days)
+    # Could make neater by using reg expressions
     ageUponIntake = []
     for i in range(len(animal_intake['AgeuponIntake'])):
         if "months" in animal_intake['AgeuponIntake'].iloc[i] or "month" in animal_intake['AgeuponIntake'].iloc[i]:
@@ -315,75 +261,56 @@ def PreprocessData(animal_outcome,animal_intake):
             ageUponOutcome.append(animal_intake['AgeuponOutcome'].iloc[i])
             continue
 
-
-
-
-
-
-
-
-
     animal_intake['AgeuponOutcome'] = ageUponOutcome
     animal_intake['AgeuponIntake'] = ageUponIntake
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(dataset[:10])
 
+    # Split sex upon intake as Gender, and intactness
+    animal_intake['Intactness'], animal_intake['Gender'] = animal_intake['SexuponIntake'].str.split(' ', 1).str
+    animal_intake.drop(['SexuponIntake'], axis=1, inplace=True)
+    # End break up SexuponIntake into Gender and Intactness
 
-
-
-
-
-
-
-#Split sex upon intake as Gender, and intactness
-    animal_intake['Intactness'], animal_intake['Gender'] = animal_intake['SexuponIntake'].str.split(' ',1).str
-    animal_intake.drop(['SexuponIntake'],axis=1,inplace=True)
-    #End break up SexuponIntake into Gender and Intactness
-
-
-    #Map down colors into color_list
-    colorset=[]
+    # Map down colors into color_list
+    colorset = []
     colorsForList = []
-    color_list = {'Brown':'Brown','White':'White','Red':'Red','Blue':'Blue','Black':'Black','Orange':'Orange','Yellow':'Yellow','Tan':'Brown','Tortie':"Brown/Black",'Tricolor':'Mixed','Chocolate':'Brown',"Calico":"Brown/White","Gold":'Yellow','Cream':'Brown','Gray':'Black','Gray':'Gray','Agouti':'Brown','Apricot':'Orange','Buff':'Tan','Fawn':'Tan','Flame Point':'White','Green':'Green','Silver':'Gray','Seal':'Black/White','Pink':'Red','Lilac Point':'White','Liver':'Red','Lynx Point':'Black/White','Sable':'Black','Torbie':'Gray'}
+    color_list = {'Brown': 'Brown', 'White': 'White', 'Red': 'Red', 'Blue': 'Blue', 'Black': 'Black',
+                  'Orange': 'Orange', 'Yellow': 'Yellow', 'Tan': 'Brown', 'Tortie': "Brown/Black", 'Tricolor': 'Mixed',
+                  'Chocolate': 'Brown', "Calico": "Brown/White", "Gold": 'Yellow', 'Cream': 'Brown', 'Gray': 'Black',
+                  'Gray': 'Gray', 'Agouti': 'Brown', 'Apricot': 'Orange', 'Buff': 'Tan', 'Fawn': 'Tan',
+                  'Flame Point': 'White', 'Green': 'Green', 'Silver': 'Gray', 'Seal': 'Black/White', 'Pink': 'Red',
+                  'Lilac Point': 'White', 'Liver': 'Red', 'Lynx Point': 'Black/White', 'Sable': 'Black',
+                  'Torbie': 'Gray'}
 
-    #for i in animal_intake['Color']:
-     #   if i in colorset:
-      #      continue
-       # else:
-#            colorset.append(i)
+    # for i in animal_intake['Color']:
+    #   if i in colorset:
+    #      continue
+    # else:
+    #            colorset.append(i)
 
     colors = animal_intake['Color']
 
-    nope=[]
+    nope = []
     print(len(colors))
     for i in range(len(colors)):
         print(i)
 
         if any(elem in colors.iloc[i] for elem in color_list):
-            #Choose a unique color for element
+            # Choose a unique color for element
             colorsChosen = False
-            for x,y in color_list.items():
+            for x, y in color_list.items():
                 if x in colors.iloc[i]:
-                    if(not(colorsChosen)):
+                    if (not (colorsChosen)):
                         colorsForList.append(y)
-                        colorsChosen=True
+                        colorsChosen = True
 
         else:
             print("nope %s" % colors.iloc[i])
             nope.append(colors.iloc[i])
             colorsForList.append("Other")
 
-
     animal_intake['Color'] = colorsForList
-    #End change colors snippet
-
-
-
-
-
-
-
-
+    # End change colors snippet
 
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(animal_intake[:10])
@@ -391,15 +318,39 @@ def PreprocessData(animal_outcome,animal_intake):
     return animal_intake
 
 
-
 def PredictOutcome():
-
     RandomTreesClassifier
 
     return 0
 
 
+def PredictDays(animal_dataset):
+    return 0
 
-################### HELPER FUNCTIONS and Data Structures########################################
 
+def printGraphics(animal_dataset):
+    ScanFeature = "OutcomeType"
+    OutcomeTypes = animal_dataset.OutcomeType.unique()
+    values = np.zeros(OutcomeTypes.shape)
+    for i in animal_dataset[ScanFeature]:
+        outcome = np.where(OutcomeTypes == i)
+        print(outcome[0])
+        print(i)
+        print(values[outcome])
+        values[outcome] += 1;
+
+    print(OutcomeTypes)
+    print(values)
+
+    y = np.arange(len(OutcomeTypes))
+
+
+    plt.barh(y, values, align='center', alpha=0.5)
+    plt.yticks(y, OutcomeTypes)
+    plt.xlabel('Number of Animals')
+    plt.title('OutcomeType v Count')
+
+    plt.show()
+
+    return 0;
 main()
