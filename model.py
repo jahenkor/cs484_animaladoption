@@ -83,7 +83,8 @@ def initRegr(processed_dataset):
 
 
     #    cv_scores.append(RandForestRegr(train,test,labels,ground_truth))
-        cv_scores.append(AdaBoostRegr(train,test,labels,ground_truth))
+    #    cv_scores.append(AdaBoostRegr(train,test,labels,ground_truth))
+        cv_scores.append(LinRegr(train,test,labels,ground_truth))
     mean_score = (np.array(cv_scores)/len(cv_scores))
     print(mean_score)
 
@@ -132,9 +133,13 @@ def AdaBoostRegr(train,test, labels, ground_truth):
 
     return score
 
-def linRegr(train,test):
+def LinRegr(train,test,labels,ground_truth):
+    reg = LinearRegression(fit_intercept=True).fit(train,labels)
+    predictions = reg.predict(test)
+    score = RegPrediction(ground_truth,predictions)
 
-    return 0
+
+    return score
 
 def RegPrediction(ground_truth, predict):
 
