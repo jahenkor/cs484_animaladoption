@@ -14,6 +14,9 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
 import os
 import math
+from collections import defaultdict
+d = defaultdict(LabelEncoder)
+le_name_mapping = 0
 
 
 #Remove file path from disk, to make new processed dataset
@@ -40,23 +43,79 @@ def main():
     features = np.array(processed_dataset.columns.values)
     features = np.delete(features, 0, 0)
 
+    #Start regression algoritms
+    #initRegr(processed_dataset)
+
     '''
     for x in features:
         print(x)
         printGraphics(processed_dataset,x)
 '''
 
-    train, test = train_test_split(processed_dataset, train_size =0.33, shuffle=False)
+    return 0
 
-    RandForestRegr(train,test)
+def initRegr(processed_dataset):
+    temp = np.array(processed_dataset)
+    print(temp[1])
+    #processed_dataset['LengthOfStay'].copy(deep=True)
+    #ground_truth = test['LengthOfStay'].copy()
+    #train, test = train_test_split(processed_dataset, train_size =0.33, shuffle=False)
+    folds = KFold(n_splits = 10)
+
+    for train_index, test_index in folds.split(processed_dataset):
+        train, test = temp[train_index], temp[test_index]
+        RandForestRegr(train,test)
+
+
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(processed_dataset[:10])
 
 
 
+def RandForestRegr(train,test):
+
+
+
+    labels = np.copy(train[:,16])
+
+
+    ground_truth = np.copy(test[:,16])
+
+
+    test = np.delete(test, 16, 1)
+
+
+    train = np.delete(train, 16, 1)
+
+    #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+        #print(train[:10])
+
+
+
+    regr = RandomForestRegressor(n_estimators=100)
+    regr.fit(train,labels)
+    print("Regr feature importances")
+    print(regr.feature_importances_)
+    predictions = regr.predict(test)
+    RegPrediction(ground_truth,predictions)
+
     return 0
 
+def AdaBoostRegr(train,test):
 
+
+    return 0
+
+def linRegr(train,test):
+
+    return 0
+
+def RegPrediction(ground_truth, predict):
+
+    score = r2_score(ground_truth,predict)
+    print(score)
+
+    return 0
 # Load Data
 def LoadData(isProcessed):
     if(isProcessed):
@@ -159,7 +218,7 @@ def PreprocessData(animal_outcome, animal_intake):
     # Name Field
     # Boolean
 
-    animal_intake['Name'].fillna('No')
+    animal_intake['Name'] = animal_intake['Name'].fillna('No')
     names = []
     for i in range(len(animal_intake['Name'])):
         print("Changing Name: %d" % i)
@@ -168,6 +227,7 @@ def PreprocessData(animal_outcome, animal_intake):
         else:
             names.append("No")
     animal_intake['Name'] = names
+    print(animal_intake['Name'])
 
     # End Name conversion
 
@@ -378,11 +438,21 @@ def PreprocessData(animal_outcome, animal_intake):
 
     #animal_intake[columnsEncode].apply(le.fit_transform))
     map = []
-    for i in columnsEncode:
-        animal_intake[i] = animal_intake.apply(le.fit_transform)
+    #for i in columnsEncode:
+    #    animal_intake[i] = animal_intake.apply(le.fit_transform)
+    fit = animal_intake[columnsEncode].apply(lambda x: d[x.name].fit_transform(x))
+    inverse = fit.apply(lambda x: d[x.name].inverse_transform(x))
+    animal_intake[columnsEncode] = animal_intake[columnsEncode].apply(lambda x: d[x.name].transform(x))
+    for x,v in d.items():
+        print(x, v.classes_)
+        le_name_mapping = dict(zip(v.classes_, v.transform(v.classes_)))
+        print(le_name_mapping)
+
     #Encode each categorical
     with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         print(animal_intake[:10])
+        print(inverse[:10])
+
 
 
 
@@ -398,28 +468,9 @@ def PredictOutcome():
     return 0
 
 
-def RandForestRegr(train,test):
-
-
-    labels = train['LengthOfStay'].copy(deep=True)
-
-    test = test.drop(columns=['LengthOfStay'])
-
-    train = train.drop(columns=['LengthOfStay'])
-
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-        print(train[:10])
-
-
-
-    regr = RandomForestRegressor(max_depth = 15, n_estimators=100)
-    regr.fit(train,labels)
-    print("Regr feature importances")
-    print(regr.feature_importances_)
-    print(regr.predict(test))
-
-    return 0
-
+#returns mapping
+def getMap():
+    return le_name_mapping
 
 def printGraphics(animal_dataset, feature):
     ScanFeature = "OutcomeType"
