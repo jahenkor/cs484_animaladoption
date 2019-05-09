@@ -5,7 +5,7 @@ from sklearn.model_selection import RandomizedSearchCV
 import pandas as pd
 import matplotlib
 
-matplotlib.use('agg')
+matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from datetime import date, datetime
@@ -47,8 +47,9 @@ def main():
     features = np.delete(features, 0, 0)
 
     #Start regression algoritms
-    initRegr(processed_dataset)
+ #   initRegr(processed_dataset)
 
+    printGraphics(processed_dataset)
     '''
     for x in features:
         print(x)
@@ -503,7 +504,7 @@ def PredictOutcome():
 def getMap():
     return le_name_mapping
 
-def printGraphics(animal_dataset, feature):
+def printGraphics(animal_dataset):
     ScanFeature = "OutcomeType"
     OutcomeTypes = animal_dataset.OutcomeType.unique()
     values = np.zeros(OutcomeTypes.shape)
@@ -526,6 +527,8 @@ def printGraphics(animal_dataset, feature):
     plt.title('OutcomeType v Count')
 
     plt.show()
+
+    animal_dataset.plot(x="OutcomeType",y=["Color"])
 
     return 0;
 
