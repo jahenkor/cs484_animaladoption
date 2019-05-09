@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import matplotlib
@@ -44,7 +45,7 @@ def main():
     features = np.delete(features, 0, 0)
 
     #Start regression algoritms
-    #initRegr(processed_dataset)
+    initRegr(processed_dataset)
 
     '''
     for x in features:
@@ -55,8 +56,8 @@ def main():
     return 0
 
 def initRegr(processed_dataset):
+    cv_scores = []
     temp = np.array(processed_dataset)
-    print(temp[1])
     #processed_dataset['LengthOfStay'].copy(deep=True)
     #ground_truth = test['LengthOfStay'].copy()
     #train, test = train_test_split(processed_dataset, train_size =0.33, shuffle=False)
@@ -64,11 +65,11 @@ def initRegr(processed_dataset):
 
     for train_index, test_index in folds.split(processed_dataset):
         train, test = temp[train_index], temp[test_index]
-        RandForestRegr(train,test)
+        cv_scores.append(RandForestRegr(train,test))
+    mean_score = (np.array(cv_scores)/len(cv_scores))
+    print(mean_score)
 
 
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-        print(processed_dataset[:10])
 
 
 
@@ -76,30 +77,34 @@ def RandForestRegr(train,test):
 
 
 
+    #col 16 is our dependent variable
     labels = np.copy(train[:,16])
-
-
     ground_truth = np.copy(test[:,16])
 
 
+    #Prune based on feature importance
+    #features_pruned = [16,14,12]
     test = np.delete(test, 16, 1)
-
-
     train = np.delete(train, 16, 1)
 
     #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         #print(train[:10])
 
+    gscv = GridSearchCV( estimator = RandomForestRegressor(),
+                        param_grid = {'max_depth':range(2,18), 'n_estimators':(10,50,100,1000),
+                            },
+                        cv= 10, scoring='r2',verbose=0, n_jobs = -1)
+    res = gscv.fit(train,labels)
+    best_params = grid_result.best_params_
 
 
-    regr = RandomForestRegressor(n_estimators=100)
+    regr = RandomForestRegressor(max_depth=best_params["max_depth"], n_estimators=best_params["n_estimators"], random_state=False, verbose=False)
     regr.fit(train,labels)
-    print("Regr feature importances")
     print(regr.feature_importances_)
     predictions = regr.predict(test)
-    RegPrediction(ground_truth,predictions)
+    score = RegPrediction(ground_truth,predictions)
 
-    return 0
+    return score
 
 def AdaBoostRegr(train,test):
 
@@ -115,7 +120,7 @@ def RegPrediction(ground_truth, predict):
     score = r2_score(ground_truth,predict)
     print(score)
 
-    return 0
+    return score
 # Load Data
 def LoadData(isProcessed):
     if(isProcessed):
