@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import RandomizedSearchCV
 import pandas as pd
 import matplotlib
 
@@ -13,6 +14,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
+from sklearn.tree import DecisionTreeRegressor
 import os
 import math
 from collections import defaultdict
@@ -63,9 +65,25 @@ def initRegr(processed_dataset):
     #train, test = train_test_split(processed_dataset, train_size =0.33, shuffle=False)
     folds = KFold(n_splits = 10)
 
+
     for train_index, test_index in folds.split(processed_dataset):
+
+
         train, test = temp[train_index], temp[test_index]
-        cv_scores.append(RandForestRegr(train,test))
+
+        #col 16 is our dependent variable
+        labels = np.copy(train[:,16])
+        ground_truth = np.copy(test[:,16])
+
+
+        #Prune based on feature importance
+        #features_pruned = [16,14,12]
+        test = np.delete(test, [16], 1)
+        train = np.delete(train, [16], 1)
+
+
+    #    cv_scores.append(RandForestRegr(train,test,labels,ground_truth))
+        cv_scores.append(AdaBoostRegr(train,test,labels,ground_truth))
     mean_score = (np.array(cv_scores)/len(cv_scores))
     print(mean_score)
 
@@ -73,19 +91,8 @@ def initRegr(processed_dataset):
 
 
 
-def RandForestRegr(train,test):
+def RandForestRegr(train,test,labels,ground_truth):
 
-
-
-    #col 16 is our dependent variable
-    labels = np.copy(train[:,16])
-    ground_truth = np.copy(test[:,16])
-
-
-    #Prune based on feature importance
-    #features_pruned = [16,14,12]
-    test = np.delete(test, 16, 1)
-    train = np.delete(train, 16, 1)
 
     #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         #print(train[:10])
@@ -99,17 +106,31 @@ def RandForestRegr(train,test):
 
 
     regr = RandomForestRegressor(max_depth=best_params["max_depth"], n_estimators=best_params["n_estimators"], random_state=False, verbose=False)
-    regr.fit(train,labels)
+    regr = regr.fit(train,labels)
     print(regr.feature_importances_)
     predictions = regr.predict(test)
     score = RegPrediction(ground_truth,predictions)
 
     return score
 
-def AdaBoostRegr(train,test):
+def AdaBoostRegr(train,test, labels, ground_truth):
+
+    params = {'n_estimators':[50,100], 'learning_rate':[0.01,0.05,0.1,0.3,1],
+            'loss':['linear','square','exponential']}
+
+    adaBoostRS = RandomizedSearchCV(AdaBoostRegressor(DecisionTreeRegressor()), param_distributions=params,
+            cv = 10, n_iter=50, n_jobs=-1)
+    #adaBoostRS = AdaBoostRegressor(DecisionTreeRegressor(), n_estimators=50)
+    adaBoostRS = adaBoostRS.fit(train, labels)
+    print(adaBoostRS.feature_importances_)
+    print(labels)
+    predictions = adaBoostRS.predict(test)
+    score = RegPrediction(ground_truth, predictions)
 
 
-    return 0
+
+
+    return score
 
 def linRegr(train,test):
 
