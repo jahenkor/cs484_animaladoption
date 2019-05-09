@@ -61,6 +61,8 @@ def main():
     #takes a while to run, but prints elbow plot for finding best k
     #FindBestk(processed_dataset)
     
+    #print(processed_dataset.head())
+    print(processed_dataset['Gender'].unique())
     #second value is k value for knn 
     PredictClassification(processed_dataset, 4)
     
@@ -454,7 +456,7 @@ def FindBestk(dataset):
         squared_dist.append(km.inertia_)
     plt.plot(K, squared_dist, 'bx-')
     plt.xlabel('k')
-    plt.ylabel('Sum_of_squared_distances')
+    plt.ylabel('Sum squared distances')
     plt.title('Elbow Method For Optimal k')
     plt.show()
 
@@ -525,7 +527,9 @@ def KNNClass(labels, features, kf, k):
     print("KNN TIME: ", time.time() - start, "\n")
 
 def DecisionTreeClass(labels, features, kf):  #ENTROPY > GINI
-    tree = DecisionTreeClassifier(criterion = "entropy", max_depth = 2)
+    crit = "entropy"
+    depth = 2
+    tree = DecisionTreeClassifier(criterion = crit, max_depth = depth)
     accuracy_scores = []
     log_loss_scores = []
     start = time.time()
@@ -540,14 +544,16 @@ def DecisionTreeClass(labels, features, kf):  #ENTROPY > GINI
          pred_acc = tree.predict(X_test)
          accuracy_scores.append(accuracy_score(y_test, pred_acc))
          
-    print("DECISION TREE CRITERION: ENTROPY")
-    print("DECISION TREE MAX DEPTH: 2")
+    print("DECISION TREE CRITERION: ", crit)
+    print("DECISION TREE MAX DEPTH: ", depth)
     print("DECISION TREE MEAN LOG LOSS: ", mean(log_loss_scores))
     print("DECISION TREE MEAN ACCURACY: %", mean(accuracy_scores)*100)
     print("DECISION TREE TIME: ", time.time() - start, "\n")
     
 def Adaboost(labels, features, kf): #ESTIMATOR AND LEARNING RATE
-    ada = AdaBoostClassifier(n_estimators=200, learning_rate=1.5)
+    num_est = 200
+    rate = 1.5
+    ada = AdaBoostClassifier(n_estimators=num_est, learning_rate=rate)
     accuracy_scores = []
     log_loss_scores = []
     start = time.time()
@@ -562,8 +568,8 @@ def Adaboost(labels, features, kf): #ESTIMATOR AND LEARNING RATE
          pred_acc = ada.predict(X_test)
          accuracy_scores.append(accuracy_score(y_test, pred_acc))
          
-    print("ADABOOST BASE ESTIMATORS: 200")
-    print("ADABOOST LEARNING RATE: 1.5")
+    print("ADABOOST BASE ESTIMATORS: ", num_est)
+    print("ADABOOST LEARNING RATE: ", rate)
     print("ADABOOST MEAN LOG LOSS: ", mean(log_loss_scores))
     print("ADABOOST MEAN ACCURACY: %", mean(accuracy_scores)*100)
     print("ADABOOST TIME: ", time.time() - start, "\n")
@@ -592,7 +598,9 @@ def VotingClass(labels, features, kf, estimators):
     
 
 def RandomForestClass(labels, features, kf):
-    rand = RandomForestClassifier(n_estimators = 100, criterion = 'entropy', max_depth = 3)
+    crit = 'entropy'
+    depth = 3
+    rand = RandomForestClassifier(n_estimators = 100, criterion = crit, max_depth = depth)
     #max_depth 2 worst loss than decision tree with same max
     accuracy_scores = []
     log_loss_scores = []
@@ -608,16 +616,18 @@ def RandomForestClass(labels, features, kf):
          pred_acc = rand.predict(X_test)
          accuracy_scores.append(accuracy_score(y_test, pred_acc))
     
-    print("RANDOM FOREST MAX DEPTH: 3")
-    print("RANDOM FOREST CRITERION: ENTROPY")
+    print("RANDOM FOREST CRITERION: ", crit)
+    print("RANDOM FOREST MAX DEPTH: ", depth)
     print("RANDOM FOREST MEAN LOG LOSS: ", mean(log_loss_scores))
     print("RANDOM FOREST MEAN ACCURACY: %", mean(accuracy_scores)*100)
     print("RANDOM FOREST TIME: ", time.time() - start, "\n")
 
 def OneVRest(labels, features, kf, k):
+    crit = 'entropy'
+    depth = 1
     ov1 = OneVsRestClassifier(KNeighborsClassifier(n_neighbors = k))
     ov2 = OneVsRestClassifier(GaussianNB())   
-    ov3 = OneVsRestClassifier(DecisionTreeClassifier(criterion = "entropy", max_depth = 1))
+    ov3 = OneVsRestClassifier(DecisionTreeClassifier(criterion = crit, max_depth = depth))
     
     accuracy_scores1 = []
     log_loss_scores1 = []
@@ -665,8 +675,8 @@ def OneVRest(labels, features, kf, k):
          log_loss_scores3.append(log_loss(y_test, pred_logloss3, labels = labels))
          pred_acc3 = ov3.predict(X_test)
          accuracy_scores3.append(accuracy_score(y_test, pred_acc3))      
-    print("DT CRITERION: ENTROPY")
-    print("DT MAX DEPTH: 1")
+    print("DT CRITERION: ", crit)
+    print("DT MAX DEPTH: ", depth)
     print("ONE VS REST (DT) LOG LOSS: ", mean(log_loss_scores3))
     print("ONE VS REST (DT) ACCURACY: %", mean(accuracy_scores3)*100)
     print("ONE VS REST (DT) TIME: ", time.time() - start, "\n")
