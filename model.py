@@ -9,14 +9,21 @@ matplotlib.use('tkagg')
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from datetime import date, datetime
-from sklearn.metrics import r2_score
+from sklearn.metrics import r2_score, log_loss, f1_score, accuracy_score
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold
 from sklearn.preprocessing import LabelEncoder
-from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
-from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor, RandomForestClassifier, AdaBoostClassifier, VotingClassifier
+from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
+from statistics import mean
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.multiclass import OneVsRestClassifier
 import os
 import math
+import time
 from collections import defaultdict
 d = defaultdict(LabelEncoder)
 le_name_mapping = 0
@@ -41,20 +48,21 @@ def main():
         SaveProcDatasetToDisk(processed_dataset)
     else:
         processed_dataset = LoadData(True)
+    
+
+#    printGraphics(processed_dataset)
+    processed_dataset= datasetEncode(processed_dataset)
 
 
     features = np.array(processed_dataset.columns.values)
     features = np.delete(features, 0, 0)
 
     #Start regression algoritms
- #   initRegr(processed_dataset)
+    #initRegr(processed_dataset)
 
-    printGraphics(processed_dataset)
-    '''
-    for x in features:
-        print(x)
-        printGraphics(processed_dataset,x)
-'''
+    #Start Classification algorithms
+    PredictClassification(processed_dataset)
+
 
     return 0
 
@@ -83,10 +91,11 @@ def initRegr(processed_dataset):
         train = np.delete(train, [16], 1)
 
 
-    #    cv_scores.append(RandForestRegr(train,test,labels,ground_truth))
-    #    cv_scores.append(AdaBoostRegr(train,test,labels,ground_truth))
+        #Regressors to test
+        cv_scores.append(RandForestRegr(train,test,labels,ground_truth))
+        cv_scores.append(AdaBoostRegr(train,test,labels,ground_truth))
         cv_scores.append(LinRegr(train,test,labels,ground_truth))
-    mean_score = (np.array(cv_scores)/len(cv_scores))
+    mean_score = np.mean(cv_scores)
     print(mean_score)
 
 
@@ -96,18 +105,19 @@ def initRegr(processed_dataset):
 def RandForestRegr(train,test,labels,ground_truth):
 
 
-    #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
         #print(train[:10])
 
-    gscv = GridSearchCV( estimator = RandomForestRegressor(),
-                        param_grid = {'max_depth':range(2,18), 'n_estimators':(10,50,100,1000),
-                            },
-                        cv= 10, scoring='r2',verbose=0, n_jobs = -1)
-    res = gscv.fit(train,labels)
-    best_params = grid_result.best_params_
+    #USE CSV to find optimal params
+   # gscv = GridSearchCV( estimator = RandomForestRegressor(),
+        #                param_grid = {'max_depth':range(2,18), 'n_estimators':(10,50,100,1000),
+                        #    },
+                       # cv= 10, scoring='r2',verbose=0, n_jobs = -1)
+    #res = gscv.fit(train,labels)
+    #best_params = grid_result.best_params_
 
 
-    regr = RandomForestRegressor(max_depth=best_params["max_depth"], n_estimators=best_params["n_estimators"], random_state=False, verbose=False)
+    #regr = RandomForestRegressor(max_depth=best_params["max_depth"], n_estimators=best_params["n_estimators"], random_state=False, verbose=False)
+    regr = RandomForestRegressor()
     regr = regr.fit(train,labels)
     print(regr.feature_importances_)
     predictions = regr.predict(test)
@@ -120,9 +130,10 @@ def AdaBoostRegr(train,test, labels, ground_truth):
     params = {'n_estimators':[50,100], 'learning_rate':[0.01,0.05,0.1,0.3,1],
             'loss':['linear','square','exponential']}
 
-    adaBoostRS = RandomizedSearchCV(AdaBoostRegressor(DecisionTreeRegressor()), param_distributions=params,
-            cv = 10, n_iter=50, n_jobs=-1)
-    #adaBoostRS = AdaBoostRegressor(DecisionTreeRegressor(), n_estimators=50)
+    #USE CV to find opt parameters
+    #adaBoostRS = RandomizedSearchCV(AdaBoostRegressor(DecisionTreeRegressor()), param_distributions=params,
+            #cv = 10, n_iter=50, n_jobs=-1)
+    adaBoostRS = AdaBoostRegressor(DecisionTreeRegressor(), n_estimators=50)
     adaBoostRS = adaBoostRS.fit(train, labels)
     print(adaBoostRS.feature_importances_)
     print(labels)
@@ -231,12 +242,6 @@ def BreakDates(animal_intake):
         real_date = date(int(dateSplit[2]), int(dateSplit[0]), int(dateSplit[1]))
         dayOfWeek.append(real_date.weekday())
     animal_intake['DayOfWeek_Intakes'] = dayOfWeek
-
-    #       #Remove backslashes from Date
-    # for i in range(len(animal_intake['Date'])):
-    #    print(i)
-    #   animal_intake['Date'].iloc[i] = animal_intake['Date'].iloc[i].replace("/","")
-
     return animal_intake
 
 
@@ -325,26 +330,8 @@ def PreprocessData(animal_outcome, animal_intake):
     dataset = dataset.dropna(inplace=False)
 
     BreakDates(dataset)
-    #    dataset = dataset.sort_values('Date_x').drop_duplicates('AnimalID',keep='last')
 
-    # dataset = dataset[['AnimalID','DateTime_x']].drop_duplicates(keep='last'))
-    # print(dataset[['AnimalID','DateTime_y']].drop_duplicates(keep='last'))
-
-    # dataset[['AnimalID','Date_x','Time_x']] = dataset[['AnimalID','Date_x','Time_x']].drop_duplicates(keep='last')
-
-    # dataset[['AnimalID','Date_y','Time_y']] = dataset[['AnimalID','Date_y','Time_y']].drop_duplicates(keep='last')
-
-    # dataset.dropna(inplace=True)
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-        print(dataset[:10])
-
-    #    print(dataset['MonthYear_x'].drop_duplicates(keep='last'))
-    # print(name_freq)
-    # dataset['NameFreq'] = name_freq
-    # print(dataset)
-    # print(dataset.columns)
-
-    # To fit below code
+    
     animal_intake = dataset
 
     # Fix Age (Normalize values to age in days)
@@ -461,11 +448,19 @@ def PreprocessData(animal_outcome, animal_intake):
 
     #Remove Animal ID
     animal_intake = animal_intake.drop(columns=['AnimalID'])
+    animal_intake = animal_intake.dropna(inplace=False)
+
+
+
+
+
+    return animal_intake
+
+def datasetEncode(animal_intake):
 
     #Change categorical to numerical values
     columnsEncode = ['OutcomeType','SexuponOutcome','Name','IntakeType','IntakeCondition','AnimalType', 'Color', 'Aggressive', 'Mixed', 'Intactness', 'Gender']
     le = LabelEncoder()
-    animal_intake = animal_intake.dropna(inplace=False)
 
 
     #animal_intake[columnsEncode].apply(le.fit_transform))
@@ -485,10 +480,7 @@ def PreprocessData(animal_outcome, animal_intake):
         print(animal_intake[:10])
         print(inverse[:10])
 
-
-
-
-    return animal_intake
+        return animal_intake
 
 def SaveProcDatasetToDisk(dataset):
     dataset.to_csv(path_or_buf=PROC_DATASET,index=False)
@@ -528,8 +520,296 @@ def printGraphics(animal_dataset):
 
     plt.show()
 
-    animal_dataset.plot(x="OutcomeType",y=["Color"])
+    cols = ["Name"]
+    #animal_dataset.plot(x="OutcomeType",y=["Color"],kind="bar")
+    #animal_dataset = pd.DataFrame(animal_dataset['OutcomeType','Color'],index=animal_dataset.Color.unique())
+    ax = animal_dataset.groupby(['OutcomeType','Name'])['OutcomeType'].count().unstack(0).plot.bar(title="Name v OutcomeType", figsize=(14,8))
+    _ = ax.set_xlabel('Name')
+    _ = ax.set_ylabel('Frequency')
+    ax.plot
+    plt.show()
+
+    cols = ["IntakeCondition"]
+    #animal_dataset.plot(x="OutcomeType",y=["Color"],kind="bar")
+    #animal_dataset = pd.DataFrame(animal_dataset['OutcomeType','Color'],index=animal_dataset.Color.unique())
+    ax = animal_dataset.groupby(['OutcomeType','IntakeCondition'])['OutcomeType'].count().unstack(0).plot.bar(title="IntakeCondition v OutcomeType", figsize=(14,8))
+    _ = ax.set_xlabel('IntakeCondition')
+    _ = ax.set_ylabel('Frequency')
+    ax.plot
+    plt.show()
+
+
+    cols = ["Mixed"]
+    #animal_dataset.plot(x="OutcomeType",y=["Color"],kind="bar")
+    #animal_dataset = pd.DataFrame(animal_dataset['OutcomeType','Color'],index=animal_dataset.Color.unique())
+    ax = animal_dataset.groupby(['OutcomeType','Mixed'])['OutcomeType'].count().unstack(0).plot.bar(title="Mixed v OutcomeType", figsize=(14,8))
+    _ = ax.set_xlabel('Mixed')
+    _ = ax.set_ylabel('Frequency')
+    ax.plot
+    plt.show()
+
+
+
+
+
+
+
+
+    cols = ["Color"]
+    #animal_dataset.plot(x="OutcomeType",y=["Color"],kind="bar")
+    #animal_dataset = pd.DataFrame(animal_dataset['OutcomeType','Color'],index=animal_dataset.Color.unique())
+    ax = animal_dataset.groupby(['OutcomeType','Color'])['OutcomeType'].count().unstack(0).plot.bar(title="Color on OutcomeType", figsize=(14,8))
+    _ = ax.set_xlabel('Color')
+    _ = ax.set_ylabel('Frequency')
+    ax.plot
+    plt.show()
+
+
 
     return 0;
+# ----- CLASSIFICATION -----#
+ 
+def FindBestk(dataset):
+    #reference: https://blog.cambridgespark.com/how-to-determine-the-optimal-number-of-clusters-for-k-means-clustering-14f27070048f
+    mms = MinMaxScaler()
+    mms.fit(dataset)
+    data_transformed = mms.transform(dataset)
+    squared_dist = []
+    K = range(1,31)
+    for k in K:
+        km = KMeans(n_clusters=k)
+        km = km.fit(data_transformed)
+        squared_dist.append(km.inertia_)
+    plt.plot(K, squared_dist, 'bx-')
+    plt.xlabel('k')
+    plt.ylabel('Sum squared distances')
+    plt.title('Elbow Method For Optimal k')
+    plt.show()
+
+def PredictClassification(dataset):
+    #reference: https://machinelearningmastery.com/k-fold-cross-validation/
+    #for basic Kfold cross validation
+    labels = dataset['OutcomeType'].copy(deep=True)
+    features = dataset.drop(columns=['OutcomeType'])
+    
+    model1 = GaussianNB()
+    model2 = KNeighborsClassifier(n_neighbors = 4)
+    model3 = DecisionTreeClassifier(criterion = "entropy", max_depth = 3)
+    model4 = AdaBoostClassifier(n_estimators=50, learning_rate=1.5)
+    estimators = [('GB', model1), ('KNN', model2), ('AD', model4)] #for voting classifier
+    #estimators = [('GB', model1), ('KNN', model2)]
+    
+    k = 4
+    
+    kf = KFold(n_splits=10, shuffle = True)
+    
+    whole_time = time.time()
+    NaiveBayesClass(labels, features, kf)
+    KNNClass(labels, features, kf, k)
+    DecisionTreeClass(labels, features, kf)
+    Adaboost(labels, features, kf)
+    VotingClass(labels, features, kf, estimators)
+    RandomForestClass(labels, features, kf)
+    OneVRest(labels, features, kf, k)
+    print("TOTAL TIME: ", time.time() - whole_time)
+    
+
+def NaiveBayesClass(labels, features, kf):  
+    nb = GaussianNB()
+    accuracy_scores = []
+    log_loss_scores = []
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         nb.fit(X_train, y_train)
+         
+         pred_logloss = nb.predict_proba(X_test)
+         log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
+         
+         pred_acc = nb.predict(X_test)
+         accuracy_scores.append(f1_score(y_test, pred_acc, average = 'micro'))
+         
+    print("NAIVE BAYES MEAN LOG LOSS: ", mean(log_loss_scores))
+    print("NAIVE BAYES MEAN F1 SCORE: ", mean(accuracy_scores))
+    print("NB TIME: ", time.time() - start, "\n")
+    
+def KNNClass(labels, features, kf, k):
+    knn = KNeighborsClassifier(n_neighbors = k)
+    accuracy_scores = []
+    log_loss_scores = []
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         knn.fit(X_train, y_train)
+         
+         pred_logloss = knn.predict_proba(X_test)
+         log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
+         
+         pred_acc = knn.predict(X_test)
+         accuracy_scores.append(f1_score(y_test, pred_acc, average = 'micro'))
+         
+    print("K VALUE: ", k)
+    print("KNN MEAN LOG LOSS: ", mean(log_loss_scores))
+    print("KNN MEAN F1 SCORE: ", mean(accuracy_scores))
+    print("KNN TIME: ", time.time() - start, "\n")
+
+def DecisionTreeClass(labels, features, kf):  #ENTROPY > GINI
+    crit = "entropy"
+    depth = 2
+    tree = DecisionTreeClassifier(criterion = crit, max_depth = depth)
+    accuracy_scores = []
+    log_loss_scores = []
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         tree.fit(X_train, y_train)
+         
+         pred_logloss = tree.predict_proba(X_test)
+         log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
+         
+         pred_acc = tree.predict(X_test)
+         accuracy_scores.append(f1_score(y_test, pred_acc, average = 'micro'))
+         
+    print("DECISION TREE CRITERION: ", crit)
+    print("DECISION TREE MAX DEPTH: ", depth)
+    print("DECISION TREE MEAN LOG LOSS: ", mean(log_loss_scores))
+    print("DECISION TREE MEAN F1 SCORE: ", mean(accuracy_scores))
+    print("DECISION TREE TIME: ", time.time() - start, "\n")
+    
+def Adaboost(labels, features, kf): #ESTIMATOR AND LEARNING RATE
+    num_est = 50
+    rate = 1.5
+    ada = AdaBoostClassifier(n_estimators=num_est, learning_rate=rate)
+    accuracy_scores = []
+    log_loss_scores = []
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         ada.fit(X_train, y_train)
+         
+         pred_logloss = ada.predict_proba(X_test)
+         log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
+         
+         pred_acc = ada.predict(X_test)
+         accuracy_scores.append(f1_score(y_test, pred_acc, average = 'micro'))
+         
+    print("ADABOOST BASE ESTIMATORS: ", num_est)
+    print("ADABOOST LEARNING RATE: ", rate)
+    print("ADABOOST MEAN LOG LOSS: ", mean(log_loss_scores))
+    print("ADABOOST MEAN F1 SCORE: ", mean(accuracy_scores))
+    print("ADABOOST TIME: ", time.time() - start, "\n")
+    
+def VotingClass(labels, features, kf, estimators):
+    vc = VotingClassifier(estimators = estimators, voting = 'soft')
+    #lowers with addition of ADA
+    accuracy_scores = []
+    log_loss_scores = []
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         vc.fit(X_train, y_train)
+         
+         pred_logloss = vc.predict_proba(X_test)
+         log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
+         
+         pred_acc = vc.predict(X_test)
+         accuracy_scores.append(f1_score(y_test, pred_acc, average = 'micro'))
+         
+
+    print("VOTING MEAN LOG LOSS: ", mean(log_loss_scores))
+    print("VOTING MEAN F1 SCORE: ", mean(accuracy_scores))
+    print("VOTING TIME: ", time.time() - start, "\n")
+    
+
+def RandomForestClass(labels, features, kf):
+    crit = 'entropy'
+    depth = 2
+    rand = RandomForestClassifier(n_estimators = 50, criterion = crit, max_depth = depth)
+    #max_depth 2 worst loss than decision tree with same max
+    accuracy_scores = []
+    log_loss_scores = []
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         rand.fit(X_train, y_train)
+         
+         pred_logloss = rand.predict_proba(X_test)
+         log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
+         
+         pred_acc = rand.predict(X_test)
+         accuracy_scores.append(f1_score(y_test, pred_acc, average = 'micro'))
+    
+    print("RANDOM FOREST CRITERION: ", crit)
+    print("RANDOM FOREST MAX DEPTH: ", depth)
+    print("RANDOM FOREST MEAN LOG LOSS: ", mean(log_loss_scores))
+    print("RANDOM FOREST MEAN F1 SCORE: ", mean(accuracy_scores))
+    print("RANDOM FOREST TIME: ", time.time() - start, "\n")
+
+def OneVRest(labels, features, kf, k):
+    crit = 'entropy'
+    depth = 1
+    ov1 = OneVsRestClassifier(KNeighborsClassifier(n_neighbors = k))
+    ov2 = OneVsRestClassifier(GaussianNB())   
+    ov3 = OneVsRestClassifier(DecisionTreeClassifier(criterion = crit, max_depth = depth))
+    
+    accuracy_scores1 = []
+    log_loss_scores1 = []
+    
+    accuracy_scores2 = []
+    log_loss_scores2 = []
+    
+    accuracy_scores3 = []
+    log_loss_scores3 = []
+    
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         
+         ov1.fit(X_train, y_train)
+         pred_logloss1 = ov1.predict_proba(X_test)
+         log_loss_scores1.append(log_loss(y_test, pred_logloss1, labels = labels))
+         pred_acc1 = ov1.predict(X_test)
+         accuracy_scores1.append(f1_score(y_test, pred_acc1, average = 'micro'))
+    print("K VALUE: ", k)
+    print("ONE VS REST (KNN) LOG LOSS: ", mean(log_loss_scores1))
+    print("ONE VS REST (KNN) F1 SCORE: ", mean(accuracy_scores1))
+    print("ONE VS REST (KNN) TIME: ", time.time() - start, "\n")
+         
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]  
+         ov2.fit(X_train, y_train)
+         pred_logloss2 = ov2.predict_proba(X_test)
+         log_loss_scores2.append(log_loss(y_test, pred_logloss2, labels = labels))
+         pred_acc2 = ov2.predict(X_test)
+         accuracy_scores2.append(f1_score(y_test, pred_acc2, average = 'micro'))
+    print("ONE VS REST (NB) LOG LOSS: ", mean(log_loss_scores2))
+    print("ONE VS REST (NB) F1 SCORE: ", mean(accuracy_scores2))
+    print("ONE VS REST (NB) TIME: ", time.time() - start, "\n")
+         
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         ov3.fit(X_train, y_train)
+         pred_logloss3 = ov3.predict_proba(X_test)
+         log_loss_scores3.append(log_loss(y_test, pred_logloss3, labels = labels))
+         pred_acc3 = ov3.predict(X_test)
+         accuracy_scores3.append(f1_score(y_test, pred_acc3, average = 'micro'))      
+    print("DT CRITERION: ", crit)
+    print("DT MAX DEPTH: ", depth)
+    print("ONE VS REST (DT) LOG LOSS: ", mean(log_loss_scores3))
+    print("ONE VS REST (DT) F1 SCORE: ", mean(accuracy_scores3))
+    print("ONE VS REST (DT) TIME: ", time.time() - start, "\n")
+    
+# ----- END CLASSIFICATION -----#
 
 main()
