@@ -1,20 +1,30 @@
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 import matplotlib
 
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
+from IPython import get_ipython
+get_ipython().run_line_magic('matplotlib', 'inline')
 from sklearn.model_selection import train_test_split
 from datetime import date, datetime
-from sklearn.metrics import r2_score
+from sklearn.metrics import r2_score, accuracy_score, log_loss
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.preprocessing import LabelEncoder
-from sklearn.ensemble import AdaBoostRegressor, RandomForestRegressor
+from sklearn.ensemble import VotingClassifier
+from sklearn.ensemble import AdaBoostClassifier, AdaBoostRegressor
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from statistics import mean
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import MinMaxScaler
 import os
 import math
-
+import time
 
 #Remove file path from disk, to make new processed dataset
 PROC_DATASET= 'dataset/procdataset.csv'
@@ -47,10 +57,18 @@ def main():
 '''
 
     train, test = train_test_split(processed_dataset, train_size =0.33, shuffle=False)
-
-    RandForestRegr(train,test)
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-        print(processed_dataset[:10])
+    
+    #takes a while to run, but prints elbow plot for finding best k
+    #FindBestk(processed_dataset)
+    
+    #second value is k value for knn 
+    PredictClassification(processed_dataset, 4)
+    
+    #print(train.columns)
+    #print(train.head())
+    #RandForestRegr(train,test)
+    #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+    #    print(processed_dataset[:10])
 
 
 
@@ -407,19 +425,253 @@ def RandForestRegr(train,test):
 
     train = train.drop(columns=['LengthOfStay'])
 
-    with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
-        print(train[:10])
+    #with pd.option_context('display.max_rows', None, 'display.max_columns', None):  # more options can be specified also
+    #    print(train[:10])
 
 
 
     regr = RandomForestRegressor(max_depth = 15, n_estimators=100)
     regr.fit(train,labels)
-    print("Regr feature importances")
-    print(regr.feature_importances_)
-    print(regr.predict(test))
+    #print("Regr feature importances")
+    #print(regr.feature_importances_)
+    #print(labels)
+    #print(regr.predict(test))
 
     return 0
 
+# ----- CLASSIFICATION -----#
+ 
+def FindBestk(dataset):
+    #reference: https://blog.cambridgespark.com/how-to-determine-the-optimal-number-of-clusters-for-k-means-clustering-14f27070048f
+    mms = MinMaxScaler()
+    mms.fit(dataset)
+    data_transformed = mms.transform(dataset)
+    squared_dist = []
+    K = range(1,31)
+    for k in K:
+        km = KMeans(n_clusters=k)
+        km = km.fit(data_transformed)
+        squared_dist.append(km.inertia_)
+    plt.plot(K, squared_dist, 'bx-')
+    plt.xlabel('k')
+    plt.ylabel('Sum_of_squared_distances')
+    plt.title('Elbow Method For Optimal k')
+    plt.show()
+
+def PredictClassification(dataset, k):
+    #reference: https://machinelearningmastery.com/k-fold-cross-validation/
+    #for basic Kfold cross validation
+    labels = dataset['OutcomeType'].copy(deep=True)
+    features = dataset.drop(columns=['OutcomeType'])
+    
+    model1 = GaussianNB()
+    model2 = KNeighborsClassifier(n_neighbors = 4)
+    model3 = DecisionTreeClassifier(criterion = "entropy", max_depth = 3)
+    model4 = AdaBoostClassifier(n_estimators=200, learning_rate=1.5)
+    estimators = [('GB', model1), ('KNN', model2), ('DT', model3)] #for voting classifier
+    
+    kf = KFold(n_splits=10, shuffle = True)
+    
+    whole_time = time.time()
+    NaiveBayesClass(labels, features, kf)
+    KNNClass(labels, features, kf, k)
+    DecisionTreeClass(labels, features, kf)
+    Adaboost(labels, features, kf)
+    VotingClass(labels, features, kf, estimators)
+    RandomForestClass(labels, features, kf)
+    OneVRest(labels, features, kf, k)
+    print("TOTAL TIME: ", time.time() - whole_time)
+    
+
+def NaiveBayesClass(labels, features, kf):  
+    nb = GaussianNB()
+    accuracy_scores = []
+    log_loss_scores = []
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         nb.fit(X_train, y_train)
+         
+         pred_logloss = nb.predict_proba(X_test)
+         log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
+         
+         pred_acc = nb.predict(X_test)
+         accuracy_scores.append(accuracy_score(y_test, pred_acc))
+         
+    print("NAIVE BAYES MEAN LOG LOSS: ", mean(log_loss_scores))
+    print("NAIVE BAYES MEAN ACCURACY: %", mean(accuracy_scores)*100)
+    print("NB TIME: ", time.time() - start, "\n")
+    
+def KNNClass(labels, features, kf, k):
+    knn = KNeighborsClassifier(n_neighbors = k)
+    accuracy_scores = []
+    log_loss_scores = []
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         knn.fit(X_train, y_train)
+         
+         pred_logloss = knn.predict_proba(X_test)
+         log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
+         
+         pred_acc = knn.predict(X_test)
+         accuracy_scores.append(accuracy_score(y_test, pred_acc))
+         
+    print("K VALUE: ", k)
+    print("KNN MEAN LOG LOSS: ", mean(log_loss_scores))
+    print("KNN MEAN ACCURACY: %", mean(accuracy_scores)*100)
+    print("KNN TIME: ", time.time() - start, "\n")
+
+def DecisionTreeClass(labels, features, kf):  #ENTROPY > GINI
+    tree = DecisionTreeClassifier(criterion = "entropy", max_depth = 2)
+    accuracy_scores = []
+    log_loss_scores = []
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         tree.fit(X_train, y_train)
+         
+         pred_logloss = tree.predict_proba(X_test)
+         log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
+         
+         pred_acc = tree.predict(X_test)
+         accuracy_scores.append(accuracy_score(y_test, pred_acc))
+         
+    print("DECISION TREE CRITERION: ENTROPY")
+    print("DECISION TREE MAX DEPTH: 2")
+    print("DECISION TREE MEAN LOG LOSS: ", mean(log_loss_scores))
+    print("DECISION TREE MEAN ACCURACY: %", mean(accuracy_scores)*100)
+    print("DECISION TREE TIME: ", time.time() - start, "\n")
+    
+def Adaboost(labels, features, kf): #ESTIMATOR AND LEARNING RATE
+    ada = AdaBoostClassifier(n_estimators=200, learning_rate=1.5)
+    accuracy_scores = []
+    log_loss_scores = []
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         ada.fit(X_train, y_train)
+         
+         pred_logloss = ada.predict_proba(X_test)
+         log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
+         
+         pred_acc = ada.predict(X_test)
+         accuracy_scores.append(accuracy_score(y_test, pred_acc))
+         
+    print("ADABOOST BASE ESTIMATORS: 200")
+    print("ADABOOST LEARNING RATE: 1.5")
+    print("ADABOOST MEAN LOG LOSS: ", mean(log_loss_scores))
+    print("ADABOOST MEAN ACCURACY: %", mean(accuracy_scores)*100)
+    print("ADABOOST TIME: ", time.time() - start, "\n")
+    
+def VotingClass(labels, features, kf, estimators):
+    vc = VotingClassifier(estimators = estimators, voting = 'soft')
+    #lowers with addition of ADA
+    accuracy_scores = []
+    log_loss_scores = []
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         vc.fit(X_train, y_train)
+         
+         pred_logloss = vc.predict_proba(X_test)
+         log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
+         
+         pred_acc = vc.predict(X_test)
+         accuracy_scores.append(accuracy_score(y_test, pred_acc))
+         
+
+    print("VOTING MEAN LOG LOSS: ", mean(log_loss_scores))
+    print("VOTING MEAN ACCURACY: %", mean(accuracy_scores)*100)
+    print("VOTING TIME: ", time.time() - start, "\n")
+    
+
+def RandomForestClass(labels, features, kf):
+    rand = RandomForestClassifier(n_estimators = 100, criterion = 'entropy', max_depth = 3)
+    #max_depth 2 worst loss than decision tree with same max
+    accuracy_scores = []
+    log_loss_scores = []
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         rand.fit(X_train, y_train)
+         
+         pred_logloss = rand.predict_proba(X_test)
+         log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
+         
+         pred_acc = rand.predict(X_test)
+         accuracy_scores.append(accuracy_score(y_test, pred_acc))
+    
+    print("RANDOM FOREST MAX DEPTH: 3")
+    print("RANDOM FOREST CRITERION: ENTROPY")
+    print("RANDOM FOREST MEAN LOG LOSS: ", mean(log_loss_scores))
+    print("RANDOM FOREST MEAN ACCURACY: %", mean(accuracy_scores)*100)
+    print("RANDOM FOREST TIME: ", time.time() - start, "\n")
+
+def OneVRest(labels, features, kf, k):
+    ov1 = OneVsRestClassifier(KNeighborsClassifier(n_neighbors = k))
+    ov2 = OneVsRestClassifier(GaussianNB())   
+    ov3 = OneVsRestClassifier(DecisionTreeClassifier(criterion = "entropy", max_depth = 1))
+    
+    accuracy_scores1 = []
+    log_loss_scores1 = []
+    
+    accuracy_scores2 = []
+    log_loss_scores2 = []
+    
+    accuracy_scores3 = []
+    log_loss_scores3 = []
+    
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         
+         ov1.fit(X_train, y_train)
+         pred_logloss1 = ov1.predict_proba(X_test)
+         log_loss_scores1.append(log_loss(y_test, pred_logloss1, labels = labels))
+         pred_acc1 = ov1.predict(X_test)
+         accuracy_scores1.append(accuracy_score(y_test, pred_acc1))
+    print("K VALUE: ", k)
+    print("ONE VS REST (KNN) LOG LOSS: ", mean(log_loss_scores1))
+    print("ONE VS REST (KNN) ACCURACY: %", mean(accuracy_scores1)*100)
+    print("ONE VS REST (KNN) TIME: ", time.time() - start, "\n")
+         
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]  
+         ov2.fit(X_train, y_train)
+         pred_logloss2 = ov2.predict_proba(X_test)
+         log_loss_scores2.append(log_loss(y_test, pred_logloss2, labels = labels))
+         pred_acc2 = ov2.predict(X_test)
+         accuracy_scores2.append(accuracy_score(y_test, pred_acc2))
+    print("ONE VS REST (NB) LOG LOSS: ", mean(log_loss_scores2))
+    print("ONE VS REST (NB) ACCURACY: %", mean(accuracy_scores2)*100)
+    print("ONE VS REST (NB) TIME: ", time.time() - start, "\n")
+         
+    start = time.time()
+    for train, test in kf.split(features):
+         X_train, X_test = features.iloc[train], features.iloc[test]
+         y_train, y_test = labels.iloc[train], labels.iloc[test]
+         ov3.fit(X_train, y_train)
+         pred_logloss3 = ov3.predict_proba(X_test)
+         log_loss_scores3.append(log_loss(y_test, pred_logloss3, labels = labels))
+         pred_acc3 = ov3.predict(X_test)
+         accuracy_scores3.append(accuracy_score(y_test, pred_acc3))      
+    print("DT CRITERION: ENTROPY")
+    print("DT MAX DEPTH: 1")
+    print("ONE VS REST (DT) LOG LOSS: ", mean(log_loss_scores3))
+    print("ONE VS REST (DT) ACCURACY: %", mean(accuracy_scores3)*100)
+    print("ONE VS REST (DT) TIME: ", time.time() - start, "\n")
+    
+# ----- END CLASSIFICATION -----#
 
 def printGraphics(animal_dataset, feature):
     ScanFeature = "OutcomeType"
