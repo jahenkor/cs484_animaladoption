@@ -8,7 +8,7 @@ from IPython import get_ipython
 get_ipython().run_line_magic('matplotlib', 'inline')
 from sklearn.model_selection import train_test_split
 from datetime import date, datetime
-from sklearn.metrics import r2_score, accuracy_score, log_loss
+from sklearn.metrics import r2_score, accuracy_score, log_loss, f1_score
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import KFold
 from sklearn.multiclass import OneVsRestClassifier
@@ -62,9 +62,7 @@ def main():
     #FindBestk(processed_dataset)
     
     #print(processed_dataset.head())
-    print(processed_dataset['Gender'].unique())
-    #second value is k value for knn 
-    PredictClassification(processed_dataset, 4)
+    PredictClassification(processed_dataset)
     
     #print(train.columns)
     #print(train.head())
@@ -460,7 +458,7 @@ def FindBestk(dataset):
     plt.title('Elbow Method For Optimal k')
     plt.show()
 
-def PredictClassification(dataset, k):
+def PredictClassification(dataset):
     #reference: https://machinelearningmastery.com/k-fold-cross-validation/
     #for basic Kfold cross validation
     labels = dataset['OutcomeType'].copy(deep=True)
@@ -469,18 +467,21 @@ def PredictClassification(dataset, k):
     model1 = GaussianNB()
     model2 = KNeighborsClassifier(n_neighbors = 4)
     model3 = DecisionTreeClassifier(criterion = "entropy", max_depth = 3)
-    model4 = AdaBoostClassifier(n_estimators=200, learning_rate=1.5)
-    estimators = [('GB', model1), ('KNN', model2), ('DT', model3)] #for voting classifier
+    model4 = AdaBoostClassifier(n_estimators=50, learning_rate=1.5)
+    estimators = [('GB', model1), ('KNN', model2), ('AD', model4)] #for voting classifier
+    #estimators = [('GB', model1), ('KNN', model2)]
+    
+    k = 4
     
     kf = KFold(n_splits=10, shuffle = True)
     
     whole_time = time.time()
-    NaiveBayesClass(labels, features, kf)
-    KNNClass(labels, features, kf, k)
-    DecisionTreeClass(labels, features, kf)
-    Adaboost(labels, features, kf)
-    VotingClass(labels, features, kf, estimators)
-    RandomForestClass(labels, features, kf)
+    #NaiveBayesClass(labels, features, kf)
+    #KNNClass(labels, features, kf, k)
+    #DecisionTreeClass(labels, features, kf)
+    #Adaboost(labels, features, kf)
+    #VotingClass(labels, features, kf, estimators)
+    #RandomForestClass(labels, features, kf)
     OneVRest(labels, features, kf, k)
     print("TOTAL TIME: ", time.time() - whole_time)
     
@@ -499,10 +500,10 @@ def NaiveBayesClass(labels, features, kf):
          log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
          
          pred_acc = nb.predict(X_test)
-         accuracy_scores.append(accuracy_score(y_test, pred_acc))
+         accuracy_scores.append(f1_score(y_test, pred_acc, average = 'micro'))
          
     print("NAIVE BAYES MEAN LOG LOSS: ", mean(log_loss_scores))
-    print("NAIVE BAYES MEAN ACCURACY: %", mean(accuracy_scores)*100)
+    print("NAIVE BAYES MEAN F1 SCORE: ", mean(accuracy_scores))
     print("NB TIME: ", time.time() - start, "\n")
     
 def KNNClass(labels, features, kf, k):
@@ -519,11 +520,11 @@ def KNNClass(labels, features, kf, k):
          log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
          
          pred_acc = knn.predict(X_test)
-         accuracy_scores.append(accuracy_score(y_test, pred_acc))
+         accuracy_scores.append(f1_score(y_test, pred_acc, average = 'micro'))
          
     print("K VALUE: ", k)
     print("KNN MEAN LOG LOSS: ", mean(log_loss_scores))
-    print("KNN MEAN ACCURACY: %", mean(accuracy_scores)*100)
+    print("KNN MEAN F1 SCORE: ", mean(accuracy_scores))
     print("KNN TIME: ", time.time() - start, "\n")
 
 def DecisionTreeClass(labels, features, kf):  #ENTROPY > GINI
@@ -542,16 +543,16 @@ def DecisionTreeClass(labels, features, kf):  #ENTROPY > GINI
          log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
          
          pred_acc = tree.predict(X_test)
-         accuracy_scores.append(accuracy_score(y_test, pred_acc))
+         accuracy_scores.append(f1_score(y_test, pred_acc, average = 'micro'))
          
     print("DECISION TREE CRITERION: ", crit)
     print("DECISION TREE MAX DEPTH: ", depth)
     print("DECISION TREE MEAN LOG LOSS: ", mean(log_loss_scores))
-    print("DECISION TREE MEAN ACCURACY: %", mean(accuracy_scores)*100)
+    print("DECISION TREE MEAN F1 SCORE: ", mean(accuracy_scores))
     print("DECISION TREE TIME: ", time.time() - start, "\n")
     
 def Adaboost(labels, features, kf): #ESTIMATOR AND LEARNING RATE
-    num_est = 200
+    num_est = 50
     rate = 1.5
     ada = AdaBoostClassifier(n_estimators=num_est, learning_rate=rate)
     accuracy_scores = []
@@ -566,12 +567,12 @@ def Adaboost(labels, features, kf): #ESTIMATOR AND LEARNING RATE
          log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
          
          pred_acc = ada.predict(X_test)
-         accuracy_scores.append(accuracy_score(y_test, pred_acc))
+         accuracy_scores.append(f1_score(y_test, pred_acc, average = 'micro'))
          
     print("ADABOOST BASE ESTIMATORS: ", num_est)
     print("ADABOOST LEARNING RATE: ", rate)
     print("ADABOOST MEAN LOG LOSS: ", mean(log_loss_scores))
-    print("ADABOOST MEAN ACCURACY: %", mean(accuracy_scores)*100)
+    print("ADABOOST MEAN F1 SCORE: ", mean(accuracy_scores))
     print("ADABOOST TIME: ", time.time() - start, "\n")
     
 def VotingClass(labels, features, kf, estimators):
@@ -589,18 +590,18 @@ def VotingClass(labels, features, kf, estimators):
          log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
          
          pred_acc = vc.predict(X_test)
-         accuracy_scores.append(accuracy_score(y_test, pred_acc))
+         accuracy_scores.append(f1_score(y_test, pred_acc, average = 'micro'))
          
 
     print("VOTING MEAN LOG LOSS: ", mean(log_loss_scores))
-    print("VOTING MEAN ACCURACY: %", mean(accuracy_scores)*100)
+    print("VOTING MEAN F1 SCORE: ", mean(accuracy_scores))
     print("VOTING TIME: ", time.time() - start, "\n")
     
 
 def RandomForestClass(labels, features, kf):
     crit = 'entropy'
-    depth = 3
-    rand = RandomForestClassifier(n_estimators = 100, criterion = crit, max_depth = depth)
+    depth = 2
+    rand = RandomForestClassifier(n_estimators = 50, criterion = crit, max_depth = depth)
     #max_depth 2 worst loss than decision tree with same max
     accuracy_scores = []
     log_loss_scores = []
@@ -614,12 +615,12 @@ def RandomForestClass(labels, features, kf):
          log_loss_scores.append(log_loss(y_test, pred_logloss, labels = labels))
          
          pred_acc = rand.predict(X_test)
-         accuracy_scores.append(accuracy_score(y_test, pred_acc))
+         accuracy_scores.append(f1_score(y_test, pred_acc, average = 'micro'))
     
     print("RANDOM FOREST CRITERION: ", crit)
     print("RANDOM FOREST MAX DEPTH: ", depth)
     print("RANDOM FOREST MEAN LOG LOSS: ", mean(log_loss_scores))
-    print("RANDOM FOREST MEAN ACCURACY: %", mean(accuracy_scores)*100)
+    print("RANDOM FOREST MEAN F1 SCORE: ", mean(accuracy_scores))
     print("RANDOM FOREST TIME: ", time.time() - start, "\n")
 
 def OneVRest(labels, features, kf, k):
@@ -647,10 +648,10 @@ def OneVRest(labels, features, kf, k):
          pred_logloss1 = ov1.predict_proba(X_test)
          log_loss_scores1.append(log_loss(y_test, pred_logloss1, labels = labels))
          pred_acc1 = ov1.predict(X_test)
-         accuracy_scores1.append(accuracy_score(y_test, pred_acc1))
+         accuracy_scores1.append(f1_score(y_test, pred_acc1, average = 'micro'))
     print("K VALUE: ", k)
     print("ONE VS REST (KNN) LOG LOSS: ", mean(log_loss_scores1))
-    print("ONE VS REST (KNN) ACCURACY: %", mean(accuracy_scores1)*100)
+    print("ONE VS REST (KNN) F1 SCORE: ", mean(accuracy_scores1))
     print("ONE VS REST (KNN) TIME: ", time.time() - start, "\n")
          
     start = time.time()
@@ -661,9 +662,9 @@ def OneVRest(labels, features, kf, k):
          pred_logloss2 = ov2.predict_proba(X_test)
          log_loss_scores2.append(log_loss(y_test, pred_logloss2, labels = labels))
          pred_acc2 = ov2.predict(X_test)
-         accuracy_scores2.append(accuracy_score(y_test, pred_acc2))
+         accuracy_scores2.append(f1_score(y_test, pred_acc2, average = 'micro'))
     print("ONE VS REST (NB) LOG LOSS: ", mean(log_loss_scores2))
-    print("ONE VS REST (NB) ACCURACY: %", mean(accuracy_scores2)*100)
+    print("ONE VS REST (NB) F1 SCORE: ", mean(accuracy_scores2))
     print("ONE VS REST (NB) TIME: ", time.time() - start, "\n")
          
     start = time.time()
@@ -674,11 +675,11 @@ def OneVRest(labels, features, kf, k):
          pred_logloss3 = ov3.predict_proba(X_test)
          log_loss_scores3.append(log_loss(y_test, pred_logloss3, labels = labels))
          pred_acc3 = ov3.predict(X_test)
-         accuracy_scores3.append(accuracy_score(y_test, pred_acc3))      
+         accuracy_scores3.append(f1_score(y_test, pred_acc3, average = 'micro'))      
     print("DT CRITERION: ", crit)
     print("DT MAX DEPTH: ", depth)
     print("ONE VS REST (DT) LOG LOSS: ", mean(log_loss_scores3))
-    print("ONE VS REST (DT) ACCURACY: %", mean(accuracy_scores3)*100)
+    print("ONE VS REST (DT) F1 SCORE: ", mean(accuracy_scores3))
     print("ONE VS REST (DT) TIME: ", time.time() - start, "\n")
     
 # ----- END CLASSIFICATION -----#
