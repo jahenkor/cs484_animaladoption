@@ -476,12 +476,12 @@ def PredictClassification(dataset):
     kf = KFold(n_splits=10, shuffle = True)
     
     whole_time = time.time()
-    #NaiveBayesClass(labels, features, kf)
-    #KNNClass(labels, features, kf, k)
-    #DecisionTreeClass(labels, features, kf)
-    #Adaboost(labels, features, kf)
-    #VotingClass(labels, features, kf, estimators)
-    #RandomForestClass(labels, features, kf)
+    NaiveBayesClass(labels, features, kf)
+    KNNClass(labels, features, kf, k)
+    DecisionTreeClass(labels, features, kf)
+    Adaboost(labels, features, kf)
+    VotingClass(labels, features, kf, estimators)
+    RandomForestClass(labels, features, kf)
     OneVRest(labels, features, kf, k)
     print("TOTAL TIME: ", time.time() - whole_time)
     
