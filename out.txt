@@ -1,0 +1,516 @@
+      AnimalID  ...                Color
+0      A793007  ...          Brown Tabby
+1      A792585  ...                  Red
+2      A792693  ...              Apricot
+3      A793270  ...    Brown Tabby/White
+4      A793269  ...    Brown Tabby/White
+5      A793041  ...                  Tan
+6      A793019  ...                  Tan
+7      A793018  ...          Black/White
+8      A793277  ...          Brown/Black
+9      A734391  ...          White/Black
+10     A768117  ...          White/Cream
+11     A792759  ...    Black Smoke/White
+12     A772243  ...          Brown/White
+13     A793244  ...           Blue Tabby
+14     A791571  ...          White/Black
+15     A661215  ...  Brown Brindle/White
+16     A793243  ...           Blue Tabby
+17     A792540  ...            Black/Tan
+18     A763605  ...          Black/Black
+19     A793237  ...                Black
+20     A792977  ...                  Tan
+21     A793102  ...          Brown/White
+22     A793225  ...           Black/Gray
+23     A793239  ...          Black/Brown
+24     A793017  ...             Tricolor
+25     A792900  ...          White/Brown
+26     A791926  ...  Brown Brindle/White
+27     A792646  ...          Black/White
+28     A792767  ...          Black/White
+29     A792871  ...          Black/White
+...        ...  ...                  ...
+98703  A663887  ...            Red/White
+98704  A663935  ...                Brown
+98705  A663201  ...          Brown/White
+98706  A663955  ...            Black/Tan
+98707  A664171  ...                Black
+98708  A663938  ...            Black/Tan
+98709  A664261  ...               Tortie
+98710  A664260  ...          Black/White
+98711  A664262  ...         Orange Tabby
+98712  A664263  ...         Orange Tabby
+98713  A664271  ...         Orange Tabby
+98714  A663495  ...               Torbie
+98715  A664219  ...           Blue/White
+98716  A613553  ...          Black/White
+98717  A664258  ...               Silver
+98718  A648744  ...       White/Tricolor
+98719  A663546  ...  White/Brown Brindle
+98720  A664225  ...           Gray/White
+98721  A663342  ...            Red/White
+98722  A661795  ...               Tortie
+98723  A656894  ...                Black
+98724  A663833  ...                Black
+98725  A663572  ...          White/Brown
+98726  A663888  ...            Red/White
+98727  A663646  ...                White
+98728  A664223  ...                White
+98729  A664237  ...         Orange/White
+98730  A664236  ...         Orange/White
+98731  A664235  ...         Orange/White
+98732  A659834  ...                Black
+
+[98733 rows x 12 columns]
+      AnimalID  ...               Color
+0      A793286  ...              Tortie
+1      A793285  ...               Brown
+2      A793283  ...                Buff
+3      A793281  ...         Cream Tabby
+4      A793284  ...     Black/Blue Tick
+5      A793280  ...    Lynx Point/White
+6      A793277  ...         Brown/Black
+7      A793278  ...         Black Tiger
+8      A793274  ...   Brown Tabby/White
+9      A731802  ...               White
+10     A793273  ...       Brown Brindle
+11     A793272  ...         Black/White
+12     A793271  ...               White
+13     A793215  ...         Black/White
+14     A790690  ...         Black/White
+15     A793268  ...           Tan/White
+16     A582854  ...         Black/White
+17     A793270  ...   Brown Tabby/White
+18     A793269  ...   Brown Tabby/White
+19     A793262  ...         Brown Tabby
+20     A793263  ...   White/Brown Tabby
+21     A793264  ...   Brown Tiger/White
+22     A793261  ...   Brown Tabby/White
+23     A793260  ...  Orange Tabby/White
+24     A790285  ...         Brown/Black
+25     A793258  ...         Black/White
+26     A793257  ...   Brown Tabby/White
+27     A793255  ...           White/Tan
+28     A793253  ...           Tan/White
+29     A793252  ...         Black/White
+...        ...  ...                 ...
+98760  A658012  ...                 Red
+98761  A664274  ...                Buff
+98762  A664253  ...         Black/Brown
+98763  A639030  ...                 Tan
+98764  A664273  ...               Brown
+98765  A664272  ...               Brown
+98766  A664271  ...        Orange Tabby
+98767  A664268  ...                Blue
+98768  A664267  ...         White/Black
+98769  A664265  ...         Brown Tabby
+98770  A664264  ...         Brown Tabby
+98771  A664263  ...        Orange Tabby
+98772  A664262  ...        Orange Tabby
+98773  A664269  ...               White
+98774  A664259  ...               Black
+98775  A651630  ...                 Tan
+98776  A664261  ...              Tortie
+98777  A664260  ...         Black/White
+98778  A664258  ...              Silver
+98779  A648744  ...      White/Tricolor
+98780  A664266  ...                Buff
+98781  A664257  ...               Black
+98782  A664256  ...   Brown Tabby/White
+98783  A664234  ...         Black/White
+98784  A664238  ...         Black/White
+98785  A664233  ...          Blue/White
+98786  A664236  ...        Orange/White
+98787  A664237  ...        Orange/White
+98788  A664235  ...        Orange/White
+98789  A521520  ...           White/Tan
+
+[98790 rows x 12 columns]
+Index(['AnimalID', 'Name', 'DateTime', 'MonthYear', 'FoundLocation',
+       'IntakeType', 'IntakeCondition', 'AnimalType', 'SexuponIntake',
+       'AgeuponIntake', 'Breed', 'Color'],
+      dtype='object')
+Index(['AnimalID', 'Name', 'DateTime', 'MonthYear', 'DateofBirth',
+       'OutcomeType', 'OutcomeSubtype', 'AnimalType', 'SexuponOutcome',
+       'AgeuponOutcome', 'Breed', 'Color'],
+      dtype='object')
+0        A793007
+1        A792585
+2        A792693
+3        A793270
+4        A793269
+5        A793041
+6        A793019
+7        A793018
+8        A793277
+9        A734391
+10       A768117
+11       A792759
+12       A772243
+13       A793244
+14       A791571
+15       A661215
+16       A793243
+17       A792540
+18       A763605
+19       A793237
+20       A792977
+21       A793102
+22       A793225
+23       A793239
+24       A793017
+25       A792900
+26       A791926
+27       A792646
+28       A792767
+29       A792871
+          ...   
+98703    A663887
+98704    A663935
+98705    A663201
+98706    A663955
+98707    A664171
+98708    A663938
+98709    A664261
+98710    A664260
+98711    A664262
+98712    A664263
+98713    A664271
+98714    A663495
+98715    A664219
+98716    A613553
+98717    A664258
+98718    A648744
+98719    A663546
+98720    A664225
+98721    A663342
+98722    A661795
+98723    A656894
+98724    A663833
+98725    A663572
+98726    A663888
+98727    A663646
+98728    A664223
+98729    A664237
+98730    A664236
+98731    A664235
+98732    A659834
+Name: AnimalID, Length: 98733, dtype: object
+removedup intake
+      AnimalID  ...               Color
+0      A793286  ...              Tortie
+2      A793283  ...                Buff
+3      A793281  ...         Cream Tabby
+4      A793284  ...     Black/Blue Tick
+5      A793280  ...    Lynx Point/White
+7      A793278  ...         Black Tiger
+8      A793274  ...   Brown Tabby/White
+9      A731802  ...               White
+10     A793273  ...       Brown Brindle
+11     A793272  ...         Black/White
+13     A793215  ...         Black/White
+14     A790690  ...         Black/White
+15     A793268  ...           Tan/White
+16     A582854  ...         Black/White
+17     A793270  ...   Brown Tabby/White
+18     A793269  ...   Brown Tabby/White
+19     A793262  ...         Brown Tabby
+20     A793263  ...   White/Brown Tabby
+21     A793264  ...   Brown Tiger/White
+22     A793261  ...   Brown Tabby/White
+23     A793260  ...  Orange Tabby/White
+24     A790285  ...         Brown/Black
+25     A793258  ...         Black/White
+26     A793257  ...   Brown Tabby/White
+27     A793255  ...           White/Tan
+28     A793253  ...           Tan/White
+29     A793252  ...         Black/White
+30     A793251  ...         Black/Brown
+31     A790440  ...         Black/White
+32     A793110  ...         Brown/White
+...        ...  ...                 ...
+98760  A658012  ...                 Red
+98761  A664274  ...                Buff
+98762  A664253  ...         Black/Brown
+98763  A639030  ...                 Tan
+98764  A664273  ...               Brown
+98765  A664272  ...               Brown
+98766  A664271  ...        Orange Tabby
+98767  A664268  ...                Blue
+98768  A664267  ...         White/Black
+98769  A664265  ...         Brown Tabby
+98770  A664264  ...         Brown Tabby
+98771  A664263  ...        Orange Tabby
+98772  A664262  ...        Orange Tabby
+98773  A664269  ...               White
+98774  A664259  ...               Black
+98775  A651630  ...                 Tan
+98776  A664261  ...              Tortie
+98777  A664260  ...         Black/White
+98778  A664258  ...              Silver
+98779  A648744  ...      White/Tricolor
+98780  A664266  ...                Buff
+98781  A664257  ...               Black
+98782  A664256  ...   Brown Tabby/White
+98783  A664234  ...         Black/White
+98784  A664238  ...         Black/White
+98785  A664233  ...          Blue/White
+98786  A664236  ...        Orange/White
+98787  A664237  ...        Orange/White
+98788  A664235  ...        Orange/White
+98789  A521520  ...           White/Tan
+
+[93492 rows x 12 columns]
+PreDup
+PostDup  intake
+      AnimalID       Name  ...                Color NameFreq
+94592  A670057    Brownie  ...                  Red      1.0
+94591  A670059        NaN  ...                White      1.0
+94590  A670061       Koda  ...                  Red      1.0
+94589  A670064        NaN  ...                  Red      1.0
+94588  A670065     Muneca  ...            Red/White      1.0
+94587  A668372     *Greta  ...                  Tan      1.0
+94586  A668374  Princessa  ...                  Tan      1.0
+94585  A670066    *Sophie  ...               Torbie      1.0
+94584  A670068       Duke  ...                 Fawn      1.0
+94582  A670070        NaN  ...                  Tan      1.0
+94581  A670076     Apollo  ...           Blue/White      1.0
+94580  A670075        Cat  ...          Brown Tabby      1.0
+94579  A670077     *Lucas  ...                Cream      1.0
+94606  A670021       Zoey  ...          Black/Brown      1.0
+94577  A670078      Chata  ...          Brown/White      1.0
+94576  A670081     *Monty  ...          Black/White      1.0
+94575  A670082       *Max  ...            Black/Tan      1.0
+94574  A670083     Pepper  ...          Brown/Black      1.0
+94573  A670086       Gigi  ...          Sable/White      1.0
+94572  A670084     *Kayla  ...                White      1.0
+94571  A670000        Tex  ...                Black      1.0
+94570  A670085        NaN  ...           Blue/White      1.0
+94569  A670087     Benson  ...                Black      1.0
+94605  A670018      *Yeti  ...          White/Brown      1.0
+94604  A670032    Patches  ...     Blue Merle/White      1.0
+94566  A670091      *Pete  ...          Brown/White      1.0
+94565  A670090      Roxie  ...          Brown/White      1.0
+94564  A670092        NaN  ...            Tan/White      1.0
+94603  A670035    Cho-Cho  ...  Black Brindle/White      1.0
+94602  A605191     Paloma  ...                White      1.0
+...        ...        ...  ...                  ...      ...
+5048   A786732     Shadow  ...          Black/White      1.0
+5047   A786733        NaN  ...   Orange Tabby/White      1.0
+5046   A661325    Alfonso  ...          Black/White      1.0
+5045   A781100        NaN  ...            Black/Tan      1.0
+5042   A786737        NaN  ...            Brown/Tan      1.0
+5041   A786738        NaN  ...          Brown/White      1.0
+5040   A786739        NaN  ...           White/Blue      1.0
+5039   A786413      Pablo  ...          White/Black      1.0
+5037   A786704      Rebel  ...            Tan/White      1.0
+5038   A786740      Sarah  ...                Black      1.0
+5036   A786741       Coco  ...                Brown      1.0
+5035   A786743        Mia  ...            Brown/Tan      1.0
+5034   A786746        NaN  ...         Tortie Point      1.0
+5032   A784533     Paloma  ...            White/Tan      1.0
+5031   A786750      *Kona  ...          Brown/White      1.0
+5030   A786751        NaN  ...                White      1.0
+5029   A786752        NaN  ...            Black/Tan      1.0
+5028   A786753        NaN  ...        Chocolate/Tan      1.0
+5027   A768671      Chief  ...      Chocolate/White      1.0
+5061   A786711      Cinco  ...                 Blue      1.0
+5060   A786713       Beau  ...            White/Tan      1.0
+5025   A786759    Calypso  ...          Black/Brown      1.0
+5059   A786715      Creed  ...            Red/Black      1.0
+5058   A786714  Henrietta  ...           Black/Gold      1.0
+5057   A786722   *Sherman  ...          Brown/Black      1.0
+5056   A786007    *Revlon  ...  White/Brown Brindle      1.0
+5055   A786724   *Cricket  ...                Black      1.0
+5054   A786728        NaN  ...          Black/White      1.0
+5053   A786726        NaN  ...           Gray Tabby      1.0
+5052   A786727    Cartman  ...          White/Black      1.0
+
+[83270 rows x 13 columns]
+83270
+94592    A670057
+94591    A670059
+94590    A670061
+94589    A670064
+94588    A670065
+94587    A668372
+94586    A668374
+94585    A670066
+94584    A670068
+94582    A670070
+94581    A670076
+94580    A670075
+94579    A670077
+94606    A670021
+94577    A670078
+94576    A670081
+94575    A670082
+94574    A670083
+94573    A670086
+94572    A670084
+94571    A670000
+94570    A670085
+94569    A670087
+94605    A670018
+94604    A670032
+94566    A670091
+94565    A670090
+94564    A670092
+94603    A670035
+94602    A605191
+          ...   
+5048     A786732
+5047     A786733
+5046     A661325
+5045     A781100
+5042     A786737
+5041     A786738
+5040     A786739
+5039     A786413
+5037     A786704
+5038     A786740
+5036     A786741
+5035     A786743
+5034     A786746
+5032     A784533
+5031     A786750
+5030     A786751
+5029     A786752
+5028     A786753
+5027     A768671
+5061     A786711
+5060     A786713
+5025     A786759
+5059     A786715
+5058     A786714
+5057     A786722
+5056     A786007
+5055     A786724
+5054     A786728
+5053     A786726
+5052     A786727
+Name: AnimalID, Length: 83270, dtype: object
+94212    A669926
+94211    A670044
+94209    A666770
+94208    A668337
+94207    A663273
+94206    A643402
+94205    A668519
+94203    A667815
+94201    A662850
+94200    A669933
+94202    A670032
+94199    A516660
+94197    A670041
+94196    A669562
+94195    A670068
+94194    A669712
+94193    A597312
+94192    A669836
+94189    A669467
+94185    A669860
+94184    A669385
+94183    A669844
+94182    A669510
+94181    A669477
+94179    A669843
+94177    A432197
+94176    A670087
+94227    A362137
+94175    A669767
+94226    A669104
+          ...   
+4978     A661325
+4977     A786576
+4976     A778730
+4975     A782372
+4974     A786715
+4973     A784908
+4972     A785694
+4971     A786248
+4970     A786534
+4969     A786423
+4968     A786510
+4967     A765123
+4965     A786738
+4964     A786535
+4963     A786530
+4962     A786288
+4961     A786526
+4960     A784428
+4959     A786296
+4958     A786550
+4957     A786210
+4956     A786139
+4997     A786703
+4996     A786238
+4995     A784810
+4994     A786711
+4998     A784164
+4993     A786542
+4992     A786493
+4991     A785142
+Name: AnimalID, Length: 83293, dtype: object
+4938     A786865
+4941     A786871
+4890     A786917
+57069    A642712
+4848     A786980
+4847     A786979
+4846     A786981
+4869     A786946
+4762     A787099
+4697     A787180
+4635     A787268
+4614     A635775
+4578     A787342
+4561     A787367
+4554     A787364
+4525     A787396
+4526     A787398
+4470     A787478
+4454     A787490
+21500    A765229
+4368     A787603
+4359     A787614
+4323     A787660
+4320     A787657
+4351     A787626
+4249     A787754
+4236     A722965
+4173     A549917
+4201     A787804
+4172     A787839
+          ...   
+94608    A662138
+94607    A646964
+94606    A661086
+94605    A652840
+94592    A660037
+94589    A664180
+94586    A662260
+94583    A662261
+94518    A658404
+94510    A659205
+94541    A655501
+94484    A661614
+94445    A642081
+94444    A663580
+94443    A663582
+94442    A663581
+94432    A577042
+94414    A662326
+94395    A662378
+94376    A591059
+94439    A656249
+94438    A656250
+94436    A662264
+94366    A663603
+94364    A626646
+94294    A660595
+94325    A660628
+94250    A662436
+94249    A662437
+94231    A664054
+Name: AnimalID, Length: 1597, dtype: object
